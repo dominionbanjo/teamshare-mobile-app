@@ -30,14 +30,27 @@ export type TSDialogProps = ViewProps & {
   description?: React.ReactNode;
   footer?: React.ReactNode;
   trigger?: React.ReactNode;
+  /** Controlled open state (see @rn-primitives/dialog Root). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 /** TeamShare modal - surface panel, radius-lg per style guide 7.7. */
-export function TSDialog({ title, description, footer, trigger, className, children, ...props }: TSDialogProps) {
+export function TSDialog({
+  title,
+  description,
+  footer,
+  trigger,
+  open,
+  onOpenChange,
+  className,
+  children,
+  ...props
+}: TSDialogProps) {
   return (
-    <Dialog {...(props as object)}>
+    <Dialog open={open} onOpenChange={onOpenChange} {...(props as object)}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className={cn('max-w-[420px] rounded-xl', className)}>
+      <DialogContent className={cn('max-h-[85%] max-w-[420px] rounded-xl', className)}>
         {(title || description) && (
           <DialogHeader>
             {title && <DialogTitle className="text-base font-semibold">{title}</DialogTitle>}

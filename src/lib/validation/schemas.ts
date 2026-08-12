@@ -98,3 +98,32 @@ export const PaginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
+
+export const ForgotPasswordSchema = z.object({ email: emailSchema });
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
+
+/** YYYY-MM-DD text input for task due dates (converted to ISO before submit). */
+export const DueDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD (e.g. 2026-12-31)')
+  .or(z.literal(''))
+  .optional();
+
+export const CommentFormSchema = z.object({ body: z.string().min(1, 'Comment cannot be empty').max(8_000) });
+export type CommentFormInput = z.infer<typeof CommentFormSchema>;
+
+/** Mobile-friendly task create form (dueDate as YYYY-MM-DD text). */
+export const CreateTaskFormSchema = z.object({
+  title: z.string().min(2, 'Title is required').max(120),
+  priority: TaskPrioritySchema.default('medium'),
+  assigneeId: uuidSchema.optional().or(z.literal('')).optional(),
+  dueDate: DueDateSchema,
+});
+export type CreateTaskFormInput = z.infer<typeof CreateTaskFormSchema>;
+
+/** Project-scoped invite (roles from PRD section 5 project matrix). */
+export const ProjectInviteSchema = z.object({
+  email: emailSchema,
+  role: z.enum(['owner', 'member', 'viewer']).default('member'),
+});
+export type ProjectInviteInput = z.infer<typeof ProjectInviteSchema>;
