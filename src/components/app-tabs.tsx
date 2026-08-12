@@ -1,5 +1,5 @@
 import { Tabs, TabList, TabTrigger, TabSlot, TabTriggerSlotProps } from 'expo-router/ui';
-import { Folder2, Home2, Setting2, TaskSquare, type Icon } from 'iconsax-react-native';
+import { Folder2, Home2, SearchNormal1, Setting2, TaskSquare, type Icon } from 'iconsax-react-native';
 import * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ const TABS: TabDef[] = [
   { name: 'index', href: '/', label: 'Home', Icon: Home2 },
   { name: 'projects/index', href: '/projects', label: 'Projects', Icon: Folder2 },
   { name: 'tasks/index', href: '/tasks', label: 'Tasks', Icon: TaskSquare },
+  { name: 'search', href: '/search', label: 'Search', Icon: SearchNormal1 },
   { name: 'settings', href: '/settings', label: 'Settings', Icon: Setting2 },
 ];
 
@@ -52,7 +53,8 @@ export function TabButton({ tab, isFocused, ...props }: TabButtonProps) {
 
 /**
  * TeamShare app shell - headless bottom tab bar rendered with IconSax icons.
- * Routes: Home (/), Projects (/projects), Tasks (/tasks), Settings (/settings).
+ * Routes: Home (/), Projects (/projects), Tasks (/tasks), Search (/search),
+ * Settings (/settings).
  */
 export default function AppTabs() {
   const insets = useSafeAreaInsets();

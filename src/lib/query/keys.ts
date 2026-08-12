@@ -14,4 +14,8 @@ export const queryKeys = {
   invitations: ['invitations'] as const,
   notifications: ['notifications'] as const,
   companies: ['companies'] as const,
+  search: (params: Record<string, unknown>) => ['search', params] as const,
+  auditStats: (projectId?: string) => ['audit', 'stats', projectId ?? 'all'] as const,
+  auditActivity: (projectId?: string) => ['audit', 'activity', projectId ?? 'all'] as const,
+  billingUsage: ['billing', 'usage'] as const,
 };

@@ -1,6 +1,8 @@
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
+import { ArrowRight2, Chart, Element, Key, WalletMoney } from 'iconsax-react-native';
 import * as React from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import {
   TSConfirmDialog,
@@ -11,9 +13,44 @@ import {
   TSButton,
 } from '@/components/shared';
 import { useAuth } from '@/lib/auth/auth-context';
+import { cn } from '@/lib/utils';
+import { tokens } from '@/constants/theme';
+
+type SettingsRowProps = {
+  icon: React.ReactNode;
+  title: string;
+  note?: string;
+  onPress?: () => void;
+};
+
+function SettingsRow({ icon, title, note, onPress }: SettingsRowProps) {
+  const enabled = !!onPress;
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!enabled}
+      accessibilityRole={enabled ? 'button' : undefined}
+      className={cn('min-h-11 flex-row items-center gap-3 px-4 py-3', enabled && 'active:bg-muted')}
+    >
+      <View className="h-8 w-8 items-center justify-center rounded-lg bg-muted">{icon}</View>
+      <View className="flex-1">
+        <Text className={cn('text-sm font-medium', enabled ? 'text-foreground' : 'text-muted-foreground')}>
+          {title}
+        </Text>
+        {note ? <Text className="text-xs text-muted-foreground">{note}</Text> : null}
+      </View>
+      {enabled ? (
+        <ArrowRight2 size={16} variant="Outline" color={tokens.textMuted} />
+      ) : (
+        <Text className="text-xs text-muted-foreground">Web only</Text>
+      )}
+    </Pressable>
+  );
+}
 
 export default function SettingsScreen() {
   const { user, logout, status } = useAuth();
+  const router = useRouter();
 
   return (
     <TSScreen>
@@ -26,6 +63,36 @@ export default function SettingsScreen() {
             <Text className="text-base font-semibold text-foreground">{user?.name ?? '—'}</Text>
             <Text className="text-sm text-muted-foreground">{user?.email ?? '—'}</Text>
           </View>
+        </View>
+      </TSCard>
+
+      <TSCard title="Workspace tools" description="Analytics, billing, and developer features">
+        <View className="-mx-4">
+          <SettingsRow
+            icon={<Chart size={16} variant="Outline" color={tokens.info} />}
+            title="Analytics"
+            note="Project insights and activity"
+            onPress={() => router.push('/analytics')}
+          />
+          <View className="h-px bg-border" />
+          <SettingsRow
+            icon={<WalletMoney size={16} variant="Outline" color={tokens.success} />}
+            title="Billing"
+            note="Plan and usage limits"
+            onPress={() => router.push('/billing')}
+          />
+          <View className="h-px bg-border" />
+          <SettingsRow
+            icon={<Key size={16} variant="Outline" color={tokens.textMuted} />}
+            title="API keys"
+            note="Personal access tokens"
+          />
+          <View className="h-px bg-border" />
+          <SettingsRow
+            icon={<Element size={16} variant="Outline" color={tokens.textMuted} />}
+            title="Webhooks"
+            note="Task and comment events"
+          />
         </View>
       </TSCard>
 

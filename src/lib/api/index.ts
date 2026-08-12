@@ -11,4 +11,7 @@ export * from './notifications';
 export * from './envVars';
 export * from './documents';
 export * from './chat';
+export * from './search';
+export * from './billing';
+export * from './audit';
 export * from './session';
