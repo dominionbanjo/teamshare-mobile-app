@@ -155,3 +155,50 @@ export interface ListParams {
   pageSize?: number;
   search?: string;
 }
+
+export type EnvTierValue = 'dev' | 'staging' | 'prod';
+export type EnvVarActionValue = 'view' | 'reveal' | 'create' | 'edit' | 'delete' | 'export';
+
+/** Env var as returned by list endpoints - always masked (no value). */
+export interface EnvVar {
+  id: string;
+  projectId: string;
+  key: string;
+  tier: EnvTierValue;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  creator?: User | null;
+}
+
+export interface EnvVarAuditEntry {
+  id: string;
+  envVarId: string;
+  userId: string;
+  action: EnvVarActionValue;
+  at: string;
+  user?: User | null;
+}
+
+export type DocumentTypeValue = 'link' | 'file';
+
+export interface DocumentItem {
+  id: string;
+  projectId: string;
+  type: DocumentTypeValue;
+  /** http(s) URL for links; storage key/path for files. */
+  urlOrKey: string;
+  name: string;
+  uploadedBy: string;
+  createdAt: string;
+  uploader?: User | null;
+}
+
+export interface ChatMessage {
+  id: string;
+  projectId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  author?: User | null;
+}

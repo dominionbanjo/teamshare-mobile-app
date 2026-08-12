@@ -94,6 +94,30 @@ export const SendChatMessageSchema = z.object({
   body: z.string().min(1).max(4_000),
 });
 
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .max(2_048)
+  .refine((v) => /^https?:\/\/.+/i.test(v), 'Enter a valid http(s) URL');
+
+/** Document create payload - url required only for link-type docs (refined). */
+export const CreateDocumentSchema = z
+  .object({
+    projectId: uuidSchema,
+    name: z.string().min(2, 'At least 2 characters').max(120),
+    type: DocumentTypeSchema.default('link'),
+    url: httpUrlSchema.optional(),
+  })
+  .refine((v) => v.type !== 'link' || Boolean(v.url), { message: 'Enter a valid http(s) URL', path: ['url'] });
+export type CreateDocumentInput = z.infer<typeof CreateDocumentSchema>;
+
+/** Mobile form for adding a document link (projectId/type filled by caller). */
+export const DocumentLinkFormSchema = z.object({
+  name: z.string().min(2, 'At least 2 characters').max(120),
+  url: httpUrlSchema,
+});
+export type DocumentLinkFormInput = z.infer<typeof DocumentLinkFormSchema>;
+
 export const PaginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),

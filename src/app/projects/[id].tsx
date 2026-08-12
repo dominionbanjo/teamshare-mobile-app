@@ -4,6 +4,9 @@ import { Message, Profile2User, TaskSquare } from 'iconsax-react-native';
 import * as React from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 
+import { ChatPanel } from '@/components/chat-panel';
+import { DocumentsTab } from '@/components/documents-tab';
+import { EnvVarsTab } from '@/components/env-vars-tab';
 import { InviteMemberDialog } from '@/components/invite-member-dialog';
 import { TaskCreateDialog } from '@/components/task-create-dialog';
 import {
@@ -27,7 +30,7 @@ import { tokens } from '@/constants/theme';
 
 export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const router = useRouter();
 
   const project = useQuery({
@@ -66,6 +69,7 @@ export default function ProjectDetailScreen() {
   }
 
   const projectRow = project.data;
+  const currentRole = members.data?.items.find((m) => m.userId === user?.id)?.role;
 
   const membersContent = (
     <View className="gap-3">
@@ -212,6 +216,9 @@ export default function ProjectDetailScreen() {
         items={[
           { value: 'tasks', label: 'Tasks', count: tasks.data?.items.length ?? 0, content: tasksContent },
           { value: 'members', label: 'Members', count: members.data?.items.length ?? 0, content: membersContent },
+          { value: 'env', label: 'Env Vars', content: <EnvVarsTab projectId={id} canAudit={currentRole === 'owner'} /> },
+          { value: 'documents', label: 'Documents', content: <DocumentsTab projectId={id} /> },
+          { value: 'chat', label: 'Chat', content: <ChatPanel projectId={id} /> },
           { value: 'info', label: 'Info', content: infoContent },
         ]}
       />

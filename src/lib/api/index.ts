@@ -8,4 +8,7 @@ export * from './tasks';
 export * from './comments';
 export * from './invitations';
 export * from './notifications';
+export * from './envVars';
+export * from './documents';
+export * from './chat';
 export * from './session';

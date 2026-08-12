@@ -11,10 +11,18 @@ export type TSMentionTextProps = ViewProps & {
   /** Known member names - matches are rendered as mention chips. */
   names?: string[];
   onMentionPress?: (name: string) => void;
+  /** Body text classes - override for colored bubbles (e.g. white on primary). */
+  textClassName?: string;
 };
 
 /** Comment/chat body renderer - @mentions become TSMentionChip pills (style guide 7.13). */
-export function TSMentionText({ body, names = [], onMentionPress, className }: TSMentionTextProps) {
+export function TSMentionText({
+  body,
+  names = [],
+  onMentionPress,
+  textClassName = 'text-sm text-foreground',
+  className,
+}: TSMentionTextProps) {
   const normalized = names.map((n) => n.toLowerCase());
   const parts = body.split(MENTION_RE);
 
@@ -34,7 +42,7 @@ export function TSMentionText({ body, names = [], onMentionPress, className }: T
           }
         }
         return (
-          <Text key={index} className="text-sm text-foreground">
+          <Text key={index} className={textClassName}>
             {part}
           </Text>
         );
