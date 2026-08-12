@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "teamshare-mobile-app",
+    "name": "TeamShare",
     "slug": "teamshare-mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,6 +20,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },

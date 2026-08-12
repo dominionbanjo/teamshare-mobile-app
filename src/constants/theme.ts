@@ -26,6 +26,36 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/**
+ * TeamShare design tokens (mirror of docs/ui-style-guide.md section 2).
+ * Light values; dark variants come from global.css .dark:root overrides
+ * when the class is applied.
+ */
+export const tokens = {
+  primary: '#4F46E5',
+  primary600: '#4338CA',
+  primary700: '#3730A3',
+  bg: '#FFFFFF',
+  bgSubtle: '#F8FAFC',
+  bgMuted: '#F1F5F9',
+  surface: '#FFFFFF',
+  border: '#E2E8F0',
+  borderStrong: '#CBD5E1',
+  text: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#94A3B8',
+  success: '#10B981',
+  success100: '#D1FAE5',
+  warning: '#F59E0B',
+  warning100: '#FEF3C7',
+  error: '#EF4444',
+  error100: '#FEE2E2',
+  info: '#3B82F6',
+  info100: '#DBEAFE',
+  violet: '#8B5CF6',
+  violet100: '#EDE9FE',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

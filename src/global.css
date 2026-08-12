@@ -1,9 +1,86 @@
-:root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ============ TeamShare design tokens (docs/ui-style-guide.md §2) ============ */
+    --ts-primary-500: #4f46e5;
+    --ts-primary-600: #4338ca;
+    --ts-primary-700: #3730a3;
+    --ts-bg: #ffffff;
+    --ts-bg-subtle: #f8fafc;
+    --ts-bg-muted: #f1f5f9;
+    --ts-surface: #ffffff;
+    --ts-border: #e2e8f0;
+    --ts-border-strong: #cbd5e1;
+    --ts-text: #0f172a;
+    --ts-text-secondary: #475569;
+    --ts-text-muted: #94a3b8;
+    --ts-success-500: #10b981;
+    --ts-warning-500: #f59e0b;
+    --ts-error-500: #ef4444;
+    --ts-info-500: #3b82f6;
+    --ts-violet-500: #8b5cf6;
+
+    /* shadcn/reusables mapping */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 240 100% 97%;
+    --accent-foreground: 243 75% 59%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 243 75% 59%;
+    --radius: 0.5rem;
+  }
+
+  .dark:root {
+    --ts-primary-500: #6366f1;
+    --ts-bg: #0f172a;
+    --ts-bg-subtle: #1e293b;
+    --ts-bg-muted: #334155;
+    --ts-surface: #1e293b;
+    --ts-border: #334155;
+    --ts-border-strong: #475569;
+    --ts-text: #f1f5f9;
+    --ts-text-secondary: #94a3b8;
+    --ts-text-muted: #64748b;
+    --ts-success-500: #34d399;
+    --ts-warning-500: #fbbf24;
+    --ts-error-500: #f87171;
+    --ts-info-500: #60a5fa;
+    --ts-violet-500: #a78bfa;
+
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 215 28% 17%;
+    --card-foreground: 210 40% 98%;
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 25% 27%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 215 25% 27%;
+    --accent-foreground: 239 84% 67%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 25% 27%;
+    --input: 217 33% 17%;
+    --ring: 239 84% 67%;
+  }
 }
