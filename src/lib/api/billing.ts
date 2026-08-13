@@ -1,37 +1,37 @@
-/**
- * TeamShare billing - mirror of backend /billing (PRD F14).
- * Backend enforces plan limits (free: 5 members / 10 projects).
- */
-
-import { apiFetch } from './client';
-
 export type BillingPlanValue = 'free' | 'pro' | 'enterprise';
 
-export interface BillingUsageItem {
-  used: number;
-  limit: number;
-}
-
+/** Mirrors backend BillingService.usage() ({success,data:{...}} envelope). */
 export interface BillingUsage {
   plan: BillingPlanValue;
-  members: BillingUsageItem;
-  projects: BillingUsageItem;
+  members: number;
+  projects: number;
+  memberLimit: number | null;
+  projectLimit: number | null;
+  limitsReached: string[];
 }
 
 export interface BillingUpgradeResult {
-  mock?: boolean;
   url?: string;
+  reference?: string;
+  mock?: boolean;
   message?: string;
-  plan: BillingPlanValue;
+  plan?: BillingPlanValue;
 }
 
-export async function getBillingUsage(token: string): Promise<BillingUsage> {
-  return apiFetch<BillingUsage>('/billing/usage', { token });
+export async function getBillingUsage(token: string, companyId: string): Promise<BillingUsage> {
+  return apiFetch<BillingUsage>('/billing/usage', { token, query: { companyId } });
 }
 
 export async function upgradePlan(
   token: string,
+  companyId: string,
   plan: Exclude<BillingPlanValue, 'free'>
 ): Promise<BillingUpgradeResult> {
-  return apiFetch<BillingUpgradeResult>('/billing/upgrade', { method: 'POST', body: { plan }, token });
+  return apiFetch<BillingUpgradeResult>('/billing/upgrade', {
+    method: 'POST',
+    body: { companyId, plan },
+    token,
+  });
 }
+
+import { apiFetch } from './client';

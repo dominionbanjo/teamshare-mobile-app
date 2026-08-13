@@ -19,6 +19,7 @@ import {
   upgradePlan,
   type BillingPlanValue,
 } from '@/lib/api/billing';
+import { listCompanies } from '@/lib/api/companies';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
 import { tokens } from '@/constants/theme';
@@ -71,14 +72,21 @@ export default function BillingScreen() {
   const { token } = useAuth();
   const [plan, setPlan] = React.useState<'pro' | 'enterprise'>('pro');
 
+  const companies = useQuery({
+    queryKey: queryKeys.companies,
+    queryFn: () => listCompanies(token ?? ''),
+    enabled: !!token,
+  });
+  const companyId = companies.data?.items?.[0]?.company.id;
+
   const usage = useQuery({
     queryKey: queryKeys.billingUsage,
-    queryFn: () => getBillingUsage(token ?? ''),
-    enabled: !!token,
+    queryFn: () => getBillingUsage(token ?? '', companyId ?? ''),
+    enabled: !!token && !!companyId,
   });
 
   const upgrade = useMutation({
-    mutationFn: () => upgradePlan(token ?? '', plan),
+    mutationFn: () => upgradePlan(token ?? '', companyId ?? '', plan),
     onSuccess: (result) => {
       if (result.mock) {
         Alert.alert('Upgrade requested', result.message ?? `Demo mode: ${result.plan} plan simulated.`);
@@ -114,15 +122,15 @@ export default function BillingScreen() {
               <UsageRow
                 label="Members"
                 icon={<Profile2User size={16} variant="Outline" color={tokens.primary} />}
-                used={usage.data.members.used}
-                limit={usage.data.members.limit}
+                used={usage.data.members}
+                limit={usage.data.memberLimit ?? 0}
                 color={tokens.primary}
               />
               <UsageRow
                 label="Projects"
                 icon={<Folder2 size={16} variant="Outline" color={tokens.warning} />}
-                used={usage.data.projects.used}
-                limit={usage.data.projects.limit}
+                used={usage.data.projects}
+                limit={usage.data.projectLimit ?? 0}
                 color={tokens.warning}
               />
             </View>
