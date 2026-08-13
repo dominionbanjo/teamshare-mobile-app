@@ -33,8 +33,16 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
-    ],
+      ],
+        "expo-sharing",
+        [
+          "expo-image-picker",
+          {
+            "photosPermission": "TeamShare uses your photos to attach images to tasks and comments.",
+            "cameraPermission": "TeamShare uses your camera to attach photos to tasks."
+          }
+        ]
+      ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

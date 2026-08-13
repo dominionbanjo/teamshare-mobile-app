@@ -37,3 +37,11 @@ export async function createTask(token: string, payload: CreateTaskPayload): Pro
 export async function updateTask(token: string, id: string, payload: UpdateTaskPayload): Promise<Task> {
   return apiFetch<Task>(`/tasks/${id}`, { method: 'PATCH', body: payload, token });
 }
+
+export async function watchTask(token: string, id: string): Promise<Task> {
+  return apiFetch<Task>(`/tasks/${id}/watch`, { method: 'POST', token });
+}
+
+export async function unwatchTask(token: string, id: string): Promise<Task> {
+  return apiFetch<Task>(`/tasks/${id}/watch`, { method: 'DELETE', token });
+}

@@ -14,4 +14,5 @@ export * from './chat';
 export * from './search';
 export * from './billing';
 export * from './audit';
+export * from './uploads';
 export * from './session';

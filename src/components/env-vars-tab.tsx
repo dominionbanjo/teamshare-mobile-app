@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
-import { Activity, AddSquare, Copy, Eye, Key, Trash } from 'iconsax-react-native';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { Activity, AddSquare, Copy, ExternalDrive, Eye, Key, Trash } from 'iconsax-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, Text, View } from 'react-native';
 
 import {
   EnvTierBadge,
@@ -16,15 +18,16 @@ import {
   TSFormPasswordInput,
   TSFormSelect,
   TSFormTextInput,
+  TSSelect,
   TSBadge,
   TSSkeletonList,
 } from '@/components/shared';
-import { createEnvVar, deleteEnvVar, listEnvVarAudit, listEnvVars, revealEnvVar } from '@/lib/api/envVars';
+import { createEnvVar, deleteEnvVar, exportEnvVars, listEnvVarAudit, listEnvVars, revealEnvVar } from '@/lib/api/envVars';
 import type { EnvVar } from '@/lib/api/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { queryKeys } from '@/lib/query/keys';
-import { CreateEnvVarSchema, type CreateEnvVarInput } from '@/lib/validation/schemas';
+import { CreateEnvVarSchema, type CreateEnvVarInput, type EnvTier } from '@/lib/validation/schemas';
 import { tokens } from '@/constants/theme';
 
 const ENV_TIERS = [
@@ -48,6 +51,25 @@ export function EnvVarsTab({ projectId, canAudit = false }: EnvVarsTabProps) {
   const [revealed, setRevealed] = React.useState<{ key: string; value: string } | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [auditOpen, setAuditOpen] = React.useState(false);
+  const [exportTier, setExportTier] = React.useState<EnvTier>('dev');
+
+  const exportMutation = useMutation({
+    mutationFn: async (tier: EnvTier) => {
+      if (Platform.OS === 'web') {
+        throw new Error('Export available on web');
+      }
+      const text = await exportEnvVars(token ?? '', projectId, tier);
+      const file = new File(Paths.cache, 'teamshare.env');
+      file.write(text);
+      if (!(await Sharing.isAvailableAsync())) {
+        throw new Error('Export available on web');
+      }
+      await Sharing.shareAsync(file.uri, { mimeType: 'text/plain', dialogTitle: 'Export .env' });
+    },
+    onError: (err) => {
+      Alert.alert('Export failed', err.message);
+    },
+  });
 
   const envVars = useQuery({
     queryKey: queryKeys.projectEnvVars(projectId),
@@ -219,6 +241,25 @@ export function EnvVarsTab({ projectId, canAudit = false }: EnvVarsTabProps) {
       <View className="flex-row flex-wrap items-center gap-2">
         {canAudit && auditDialog}
         {addDialog}
+        <View className="flex-row items-center gap-2">
+          <View className="w-28">
+            <TSSelect
+              value={exportTier}
+              onValueChange={(v) => setExportTier(v as EnvTier)}
+              options={ENV_TIERS}
+              disabled={exportMutation.isPending}
+            />
+          </View>
+          <TSButton
+            variant="outline"
+            icon={<ExternalDrive size={16} variant="Outline" color={tokens.textSecondary} />}
+            onPress={() => exportMutation.mutate(exportTier)}
+            loading={exportMutation.isPending}
+            textClassName="text-foreground"
+          >
+            Export
+          </TSButton>
+        </View>
       </View>
 
       {mutationError && <TSFormFieldError message={mutationError} />}

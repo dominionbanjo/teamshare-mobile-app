@@ -21,6 +21,10 @@ export interface Company {
   plan?: 'free' | 'pro' | 'enterprise';
   createdAt: string;
   memberships?: Membership[];
+  /** Role of the requesting user (backend includes it on GET /companies/:id). */
+  membershipRole?: CompanyRoleValue;
+  owner?: User | null;
+  _count?: { memberships: number; teams: number; projects: number };
 }
 
 export interface Membership {
@@ -29,6 +33,26 @@ export interface Membership {
   companyId: string;
   role: CompanyRoleValue;
   joinedAt: string;
+}
+
+/** Row from GET /companies (memberships with the nested company). */
+export interface CompanyMembershipRow {
+  id: string;
+  userId: string;
+  companyId: string;
+  role: CompanyRoleValue;
+  joinedAt: string;
+  company: Company;
+}
+
+/** Row from GET /companies/:id/members. */
+export interface CompanyMember {
+  id: string;
+  userId: string;
+  companyId: string;
+  role: CompanyRoleValue;
+  joinedAt: string;
+  user: User;
 }
 
 export interface Team {
@@ -91,16 +115,34 @@ export interface Task {
   project?: Project | null;
   assignee?: User | null;
   creator?: User | null;
+  /** Watch state - backend returns these on GET /tasks/:id. */
+  watching?: boolean;
+  watcherCount?: number;
+  attachments?: Attachment[];
 }
 
 export interface Comment {
   id: string;
-  taskId: string;
+  taskId?: string | null;
+  documentId?: string | null;
+  parentId?: string | null;
   authorId: string;
   body: string;
   editedAt?: string | null;
   createdAt: string;
   author?: User | null;
+}
+
+export interface Attachment {
+  id: string;
+  taskId?: string | null;
+  commentId?: string | null;
+  fileKey?: string;
+  url?: string | null;
+  name: string;
+  mime: string;
+  uploadedBy: string;
+  createdAt: string;
 }
 
 export type InvitationStatusValue = 'pending' | 'accepted' | 'declined' | 'revoked' | 'expired';

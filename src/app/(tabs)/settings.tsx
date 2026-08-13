@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { ArrowRight2, Chart, Element, Key, WalletMoney } from 'iconsax-react-native';
+import { ArrowRight2, Building4, Chart, Element, Key, WalletMoney } from 'iconsax-react-native';
 import * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -68,6 +68,13 @@ export default function SettingsScreen() {
 
       <TSCard title="Workspace tools" description="Analytics, billing, and developer features">
         <View className="-mx-4">
+          <SettingsRow
+            icon={<Building4 size={16} variant="Outline" color={tokens.violet} />}
+            title="Companies"
+            note="Organizations, members and roles"
+            onPress={() => router.push('/companies')}
+          />
+          <View className="h-px bg-border" />
           <SettingsRow
             icon={<Chart size={16} variant="Outline" color={tokens.info} />}
             title="Analytics"

@@ -1,18 +1,21 @@
 import { apiFetch } from './client';
-import type { Comment, Paginated } from './types';
+import type { Comment } from './types';
 
 export interface CreateCommentPayload {
-  taskId: string;
+  /** Exactly one of taskId or documentId (backend validates). */
+  taskId?: string;
+  documentId?: string;
+  /** Reply to another comment (backend stores parentId). */
+  parentId?: string;
   body: string;
 }
 
-export async function listTaskComments(
-  token: string,
-  taskId: string,
-  page = 1,
-  pageSize = 100
-): Promise<Paginated<Comment>> {
-  return apiFetch<Paginated<Comment>>(`/tasks/${taskId}/comments`, { token, query: { page, pageSize } });
+/**
+ * GET /comments?taskId= - the backend returns a flat array (createdAt asc)
+ * including parentId, so replies are grouped client-side.
+ */
+export async function listTaskComments(token: string, taskId: string): Promise<Comment[]> {
+  return apiFetch<Comment[]>(`/comments`, { token, query: { taskId } });
 }
 
 export async function createComment(token: string, payload: CreateCommentPayload): Promise<Comment> {

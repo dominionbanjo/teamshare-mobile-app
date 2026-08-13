@@ -36,6 +36,8 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="projects/[id]" options={{ title: 'Project' }} />
             <Stack.Screen name="tasks/[id]" options={{ title: 'Task' }} />
+            <Stack.Screen name="companies/index" options={{ title: 'Companies' }} />
+            <Stack.Screen name="companies/[id]" options={{ title: 'Company' }} />
             <Stack.Screen name="teams" options={{ title: 'Teams' }} />
             <Stack.Screen name="invitations" options={{ title: 'Invitations' }} />
             <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />

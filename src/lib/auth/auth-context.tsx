@@ -15,6 +15,8 @@ export interface AuthContextValue {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  /** Exchange a Google OAuth code for a session (same flow as login). */
+  completeGoogle: (code: string) => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -94,9 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await updateSessionUser(fresh);
   }, [token]);
 
+  const completeGoogle = React.useCallback(
+    async (code: string) => {
+      const response = await authApi.googleToken(code);
+      await applyAuth(response);
+    },
+    [applyAuth]
+  );
+
   const value = React.useMemo<AuthContextValue>(
-    () => ({ status, user, token, login, register, logout, refreshUser }),
-    [status, user, token, login, register, logout, refreshUser]
+    () => ({ status, user, token, login, register, logout, refreshUser, completeGoogle }),
+    [status, user, token, login, register, logout, refreshUser, completeGoogle]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

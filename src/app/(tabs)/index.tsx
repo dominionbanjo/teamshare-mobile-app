@@ -106,22 +106,28 @@ export default function HomeScreen() {
 
           <ProjectCreateDialog teams={teams.data?.items ?? []} />
 
-          <View className="flex-row gap-3">
+          <View className="flex-row flex-wrap gap-3">
             <Pressable
               onPress={() => router.push('/teams')}
-              className="min-h-11 flex-1 items-center justify-center rounded-lg border border-border bg-background"
+              className="min-h-11 w-[calc(50%-6px)] items-center justify-center rounded-lg border border-border bg-background"
             >
               <Text className="text-sm font-medium text-foreground">Teams</Text>
             </Pressable>
             <Pressable
+              onPress={() => router.push('/companies')}
+              className="min-h-11 w-[calc(50%-6px)] items-center justify-center rounded-lg border border-border bg-background"
+            >
+              <Text className="text-sm font-medium text-foreground">Companies</Text>
+            </Pressable>
+            <Pressable
               onPress={() => router.push('/invitations')}
-              className="min-h-11 flex-1 items-center justify-center rounded-lg border border-border bg-background"
+              className="min-h-11 w-[calc(50%-6px)] items-center justify-center rounded-lg border border-border bg-background"
             >
               <Text className="text-sm font-medium text-foreground">Invitations</Text>
             </Pressable>
             <Pressable
               onPress={() => router.push('/notifications')}
-              className="min-h-11 flex-1 items-center justify-center rounded-lg border border-border bg-background"
+              className="min-h-11 w-[calc(50%-6px)] items-center justify-center rounded-lg border border-border bg-background"
             >
               <Text className="text-sm font-medium text-foreground">Notifications</Text>
             </Pressable>

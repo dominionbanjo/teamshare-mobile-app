@@ -36,6 +36,14 @@ export async function deleteEnvVar(token: string, id: string): Promise<void> {
   return apiFetch<void>(`/env-vars/${id}`, { method: 'DELETE', token });
 }
 
+/**
+ * GET /env-vars/export?projectId=&tier= - returns dotenv text. The backend
+ * wraps it in the standard envelope, so data is the plain string.
+ */
+export async function exportEnvVars(token: string, projectId: string, tier: string): Promise<string> {
+  return apiFetch<string>('/env-vars/export', { token, query: { projectId, tier } });
+}
+
 /** Audit trail for a project's env vars (reveals, creates, deletes...). */
 export async function listEnvVarAudit(
   token: string,

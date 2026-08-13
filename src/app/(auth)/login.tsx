@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Lock, Sms } from 'iconsax-react-native';
+import { Google, Lock, Sms } from 'iconsax-react-native';
 import * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -13,14 +13,16 @@ import {
   TSScreen,
 } from '@/components/shared';
 import { useAuth } from '@/lib/auth/auth-context';
+import { signInWithGoogle } from '@/lib/auth/google-signin';
 import { SignInSchema } from '@/lib/validation/schemas';
 import { tokens } from '@/constants/theme';
 
 export default function LoginScreen() {
-  const { login } = useAuth();
+  const { login, completeGoogle } = useAuth();
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
+  const [googlePending, setGooglePending] = React.useState(false);
 
   const onSubmit = async (values: { email: string; password: string }) => {
     setError(null);
@@ -32,6 +34,22 @@ export default function LoginScreen() {
       setError(err instanceof Error ? err.message : 'Could not sign in.');
     } finally {
       setPending(false);
+    }
+  };
+
+  const onGoogle = async () => {
+    setError(null);
+    setGooglePending(true);
+    try {
+      const outcome = await signInWithGoogle();
+      if (outcome !== 'cancelled') {
+        await completeGoogle(outcome.code);
+        router.replace('/');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google sign-in failed.');
+    } finally {
+      setGooglePending(false);
     }
   };
 
@@ -81,6 +99,22 @@ export default function LoginScreen() {
           )}
         />
       </TSCard>
+
+      <View className="flex-row items-center gap-3">
+        <View className="h-px flex-1 bg-border" />
+        <Text className="text-xs text-muted-foreground">or continue with</Text>
+        <View className="h-px flex-1 bg-border" />
+      </View>
+
+      <TSButton
+        variant="secondary"
+        icon={<Google size={18} variant="Outline" color={tokens.textSecondary} />}
+        onPress={() => void onGoogle()}
+        loading={googlePending}
+        textClassName="text-foreground"
+      >
+        Continue with Google
+      </TSButton>
 
       <View className="flex-row items-center justify-center gap-1">
         <Text className="text-sm text-muted-foreground">New to TeamShare?</Text>
