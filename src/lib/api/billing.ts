@@ -1,4 +1,7 @@
-export type BillingPlanValue = 'free' | 'pro' | 'enterprise';
+import type { PlanValue } from '@/constants/enums';
+import { apiFetch } from './client';
+
+export type BillingPlanValue = PlanValue;
 
 /** Mirrors backend BillingService.usage() ({success,data:{...}} envelope). */
 export interface BillingUsage {
@@ -33,5 +36,3 @@ export async function upgradePlan(
     token,
   });
 }
-
-import { apiFetch } from './client';

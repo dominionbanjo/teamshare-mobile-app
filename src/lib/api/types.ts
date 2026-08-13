@@ -5,6 +5,35 @@
 
 import type { ApiPagination } from './client';
 
+/**
+ * Enum value types (canonical: src/constants/enums.ts, derived from the zod
+ * schemas that mirror the backend contract).
+ */
+import type {
+  CompanyRoleValue,
+  DocumentTypeValue,
+  EnvTierValue,
+  EnvVarActionValue,
+  InvitationStatusValue,
+  PlanValue,
+  ProjectRoleValue,
+  ProjectStatusValue,
+  TaskPriorityValue,
+  TaskStatusValue,
+} from '@/constants/enums';
+export type {
+  CompanyRoleValue,
+  DocumentTypeValue,
+  EnvTierValue,
+  EnvVarActionValue,
+  InvitationStatusValue,
+  PlanValue,
+  ProjectRoleValue,
+  ProjectStatusValue,
+  TaskPriorityValue,
+  TaskStatusValue,
+};
+
 export interface User {
   id: string;
   name: string;
@@ -71,7 +100,6 @@ export interface TeamMember {
   user?: User;
 }
 
-export type ProjectStatusValue = 'active' | 'archived';
 
 export interface Project {
   id: string;
@@ -96,8 +124,6 @@ export interface ProjectMember {
   user?: User;
 }
 
-export type TaskStatusValue = 'open' | 'in_progress' | 'in_review' | 'resolved' | 'closed';
-export type TaskPriorityValue = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface Task {
   id: string;
@@ -145,7 +171,6 @@ export interface Attachment {
   createdAt: string;
 }
 
-export type InvitationStatusValue = 'pending' | 'accepted' | 'declined' | 'revoked' | 'expired';
 
 export interface Invitation {
   id: string;
@@ -185,7 +210,6 @@ export interface AuthResponse {
   tokens: AuthTokens;
 }
 
-export type CompanyRoleValue = 'owner' | 'admin' | 'member' | 'viewer' | 'secret_manager';
 
 export interface Paginated<T> {
   items: T[];
@@ -198,8 +222,6 @@ export interface ListParams {
   search?: string;
 }
 
-export type EnvTierValue = 'dev' | 'staging' | 'prod';
-export type EnvVarActionValue = 'view' | 'reveal' | 'create' | 'edit' | 'delete' | 'export';
 
 /** Env var as returned by list endpoints - always masked (no value). */
 export interface EnvVar {
@@ -222,7 +244,6 @@ export interface EnvVarAuditEntry {
   user?: User | null;
 }
 
-export type DocumentTypeValue = 'link' | 'file';
 
 export interface DocumentItem {
   id: string;

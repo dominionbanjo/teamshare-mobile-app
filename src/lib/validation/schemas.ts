@@ -22,6 +22,50 @@ export const EnvTierSchema = z.enum(['dev', 'staging', 'prod']);
 export type EnvTier = z.infer<typeof EnvTierSchema>;
 
 export const DocumentTypeSchema = z.enum(['link', 'file']);
+export type DocumentType = z.infer<typeof DocumentTypeSchema>;
+
+export const ProjectStatusSchema = z.enum(['active', 'archived']);
+export type ProjectStatus = z.infer<typeof ProjectStatusSchema>;
+
+export const InvitationStatusSchema = z.enum([
+  'pending',
+  'accepted',
+  'declined',
+  'revoked',
+  'expired',
+]);
+export type InvitationStatus = z.infer<typeof InvitationStatusSchema>;
+
+export const PlanSchema = z.enum(['free', 'pro', 'enterprise']);
+export type Plan = z.infer<typeof PlanSchema>;
+
+export const ProviderSchema = z.enum(['email', 'google']);
+export type Provider = z.infer<typeof ProviderSchema>;
+
+export const EnvVarActionSchema = z.enum([
+  'view',
+  'reveal',
+  'create',
+  'edit',
+  'delete',
+  'export',
+]);
+export type EnvVarAction = z.infer<typeof EnvVarActionSchema>;
+
+export const ApiKeyScopeSchema = z.enum([
+  'tasks:read',
+  'tasks:write',
+  'projects:read',
+  'chat:read',
+]);
+export type ApiKeyScope = z.infer<typeof ApiKeyScopeSchema>;
+
+export const WebhookEventSchema = z.enum([
+  'task.created',
+  'task.resolved',
+  'comment.created',
+]);
+export type WebhookEvent = z.infer<typeof WebhookEventSchema>;
 
 export const emailSchema = z.string().email('Enter a valid email address').max(254);
 export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128);
@@ -65,13 +109,9 @@ export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 
 export const UpdateTaskSchema = CreateTaskSchema.omit({ projectId: true }).partial();
 
-export const TASK_STATUS_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
-  open: ['in_progress'],
-  in_progress: ['in_review', 'open'],
-  in_review: ['resolved', 'in_progress', 'open'],
-  resolved: ['closed', 'open'],
-  closed: ['open'],
-};
+// Allowed status transitions (PRD s6.4 state machine) — canonical in
+// src/constants/enums.ts.
+export { TASK_STATUS_TRANSITIONS } from '@/constants/enums';
 
 export const CreateCommentSchema = z.object({
   taskId: uuidSchema,
@@ -148,6 +188,6 @@ export type CreateTaskFormInput = z.infer<typeof CreateTaskFormSchema>;
 /** Project-scoped invite (roles from PRD section 5 project matrix). */
 export const ProjectInviteSchema = z.object({
   email: emailSchema,
-  role: z.enum(['owner', 'member', 'viewer']).default('member'),
+  role: ProjectRoleSchema.default('member'),
 });
 export type ProjectInviteInput = z.infer<typeof ProjectInviteSchema>;
