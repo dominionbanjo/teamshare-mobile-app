@@ -328,7 +328,22 @@ export function ChatPanel({ projectId }: { projectId: string }) {
 
   /* ------------------------------------------------------- render */
 
-  const ownId = user?.id ?? '';
+  /** Identity for "own message" checks - session id with JWT `sub` fallback. */
+  const ownId = React.useMemo(() => {
+    if (user?.id) return user.id;
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(
+        globalThis
+          .atob(token.split('.')[1] ?? '')
+          .replace(/-/g, '+')
+          .replace(/_/g, '/')
+      ) as { sub?: unknown };
+      return typeof payload.sub === 'string' ? payload.sub : '';
+    } catch {
+      return '';
+    }
+  }, [user?.id, token]);
 
   const messages = mergeMessages(history.data?.items ?? [], live, temps);
 
@@ -461,6 +476,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
         <FlatList
           data={items}
           keyExtractor={(item) => item.key}
+          className="flex-1"
           contentContainerClassName="gap-2 p-3"
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) =>
