@@ -3,7 +3,7 @@
  * Env var keys are never returned by search (docs/api-contract.md).
  */
 
-import { apiFetch } from './client';
+import { apiFetchEnvelope } from './client';
 import type { Paginated } from './types';
 
 export type SearchKindValue = 'task' | 'comment' | 'document' | 'chat';
@@ -25,5 +25,11 @@ export interface SearchParams {
 }
 
 export async function searchWorkspace(token: string, params: SearchParams): Promise<Paginated<SearchResult>> {
-  return apiFetch<Paginated<SearchResult>>('/search', { token, query: { ...params } });
+  const { page = 1, pageSize = 25 } = params;
+  return apiFetchEnvelope<SearchResult[]>('/search', { token, query: { ...params } }).then(
+    ({ data, pagination }) => ({
+      items: data,
+      pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+    })
+  );
 }

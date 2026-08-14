@@ -29,7 +29,7 @@ export default function RegisterScreen() {
     setPending(true);
     try {
       await register(values.name, values.email, values.password);
-      router.replace('/');
+      router.replace('/workspace-intro');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not create your account.');
     } finally {
@@ -44,7 +44,7 @@ export default function RegisterScreen() {
       const outcome = await signInWithGoogle();
       if (outcome !== 'cancelled') {
         await completeGoogle(outcome.code);
-        router.replace('/');
+        router.replace('/workspace-intro');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed.');

@@ -1,8 +1,13 @@
-import { apiFetch } from './client';
+import { apiFetch, apiFetchEnvelope } from './client';
 import type { Notification, Paginated } from './types';
 
 export async function listNotifications(token: string, page = 1, pageSize = 50): Promise<Paginated<Notification>> {
-  return apiFetch<Paginated<Notification>>('/notifications', { token, query: { page, pageSize } });
+  return apiFetchEnvelope<Notification[]>('/notifications', { token, query: { page, pageSize } }).then(
+    ({ data, pagination }) => ({
+      items: data,
+      pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+    })
+  );
 }
 
 export async function markNotificationRead(token: string, id: string): Promise<Notification> {

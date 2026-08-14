@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch, apiFetchEnvelope } from './client';
 import type { Paginated, Task } from './types';
 
 export interface CreateTaskPayload {
@@ -23,7 +23,13 @@ export interface ListTasksParams {
 }
 
 export async function listTasks(token: string, params: ListTasksParams = {}): Promise<Paginated<Task>> {
-  return apiFetch<Paginated<Task>>('/tasks', { token, query: { ...params } });
+  const { page = 1, pageSize = 25, ...rest } = params;
+  return apiFetchEnvelope<Task[]>('/tasks', { token, query: { page, pageSize, ...rest } }).then(
+    ({ data, pagination }) => ({
+      items: data,
+      pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+    })
+  );
 }
 
 export async function getTask(token: string, id: string): Promise<Task> {

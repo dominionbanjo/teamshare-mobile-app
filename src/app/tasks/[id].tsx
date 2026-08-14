@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
 import { Camera, CloseCircle, DocumentUpload, Gallery, Message, MessageAdd1, Notification } from 'iconsax-react-native';
 import * as React from 'react';
-import { Alert, Pressable, RefreshControl, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import {
   PriorityBadge,
@@ -331,12 +331,17 @@ export default function TaskDetailScreen() {
                 <TSBadge tone="neutral">{attachment.mime}</TSBadge>
                 <Pressable
                   onPress={() => removeAttachment.mutate(attachment.id)}
+                  disabled={removeAttachment.isPending && removeAttachment.variables === attachment.id}
                   hitSlop={8}
                   accessibilityRole="button"
                   accessibilityLabel={`Delete ${attachment.name}`}
                   className="h-11 w-11 items-center justify-center rounded-md"
                 >
-                  <CloseCircle size={20} variant="Outline" color={tokens.error} />
+                  {removeAttachment.isPending && removeAttachment.variables === attachment.id ? (
+                    <ActivityIndicator size="small" color={tokens.error} />
+                  ) : (
+                    <CloseCircle size={20} variant="Outline" color={tokens.error} />
+                  )}
                 </Pressable>
               </View>
             ))}

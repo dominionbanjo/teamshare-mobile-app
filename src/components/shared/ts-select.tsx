@@ -3,8 +3,6 @@ import { Text, View, type ViewProps } from 'react-native';
 
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowDown2 } from 'iconsax-react-native';
-import { tokens } from '@/constants/theme';
 
 export type TSSelectProps = ViewProps & {
   value?: string;
@@ -14,7 +12,10 @@ export type TSSelectProps = ViewProps & {
   disabled?: boolean;
 };
 
-/** TeamShare select - reusables Select with IconSax chevron (style guide 7.3). */
+/**
+ * TeamShare select - reusables Select. The chevron is rendered once by the
+ * vendor SelectTrigger (ui/select) - never add another one here.
+ */
 export function TSSelect({
   value,
   onValueChange,
@@ -34,7 +35,6 @@ export function TSSelect({
     >
       <SelectTrigger className="h-10 flex-row items-center justify-between rounded-md border border-input bg-background px-3">
         <SelectValue className="text-sm text-foreground" placeholder={placeholder} />
-        <ArrowDown2 size={16} variant="Outline" color={tokens.textMuted} />
       </SelectTrigger>
       <SelectContent className="bg-surface shadow-lg">
         {options.map((opt) => (

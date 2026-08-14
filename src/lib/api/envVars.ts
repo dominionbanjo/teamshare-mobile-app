@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch, apiFetchEnvelope } from './client';
 import type { EnvVar, EnvVarAuditEntry, Paginated } from './types';
 import type { EnvTier } from '@/lib/validation/schemas';
 
@@ -20,7 +20,13 @@ export async function listEnvVars(
   page = 1,
   pageSize = 100
 ): Promise<Paginated<EnvVar>> {
-  return apiFetch<Paginated<EnvVar>>(`/projects/${projectId}/env-vars`, { token, query: { page, pageSize } });
+  return apiFetchEnvelope<EnvVar[]>('/env-vars', {
+    token,
+    query: { projectId, page, pageSize },
+  }).then(({ data, pagination }) => ({
+    items: data,
+    pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+  }));
 }
 
 export async function createEnvVar(token: string, payload: CreateEnvVarPayload): Promise<EnvVar> {
@@ -51,8 +57,11 @@ export async function listEnvVarAudit(
   page = 1,
   pageSize = 100
 ): Promise<Paginated<EnvVarAuditEntry>> {
-  return apiFetch<Paginated<EnvVarAuditEntry>>(`/projects/${projectId}/env-vars/audit`, {
+  return apiFetchEnvelope<EnvVarAuditEntry[]>('/env-vars/audit', {
     token,
-    query: { page, pageSize },
-  });
+    query: { projectId, page, pageSize },
+  }).then(({ data, pagination }) => ({
+    items: data,
+    pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+  }));
 }

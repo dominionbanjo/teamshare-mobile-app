@@ -49,8 +49,18 @@ function SettingsRow({ icon, title, note, onPress }: SettingsRowProps) {
 }
 
 export default function SettingsScreen() {
-  const { user, logout, status } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
+  const [logoutPending, setLogoutPending] = React.useState(false);
+
+  const handleLogout = async () => {
+    setLogoutPending(true);
+    try {
+      await logout();
+    } finally {
+      setLogoutPending(false);
+    }
+  };
 
   return (
     <TSScreen>
@@ -122,9 +132,9 @@ export default function SettingsScreen() {
         title="Log out?"
         description="You'll need to sign in again to access your workspaces."
         confirmLabel="Log out"
-        onConfirm={() => logout()}
+        onConfirm={() => handleLogout()}
         trigger={
-          <TSButton variant="destructive" loading={status === 'loading'}>
+          <TSButton variant="destructive" loading={logoutPending}>
             Log out
           </TSButton>
         }

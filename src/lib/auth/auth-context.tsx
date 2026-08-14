@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 
 import * as authApi from '@/lib/api/auth';
 import { clearSession, loadSession, saveSession, updateSessionUser } from '@/lib/api/session';
@@ -118,19 +118,22 @@ export function useAuth(): AuthContextValue {
   return ctx;
 }
 
-/** Redirects between (tabs) and (auth) groups based on session state. */
+/** Redirects between (tabs), workspace-intro and (auth) groups based on session state. */
 export function AuthGate() {
   const { status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   React.useEffect(() => {
     if (status === 'loading') return;
     if (status === 'unauthenticated') {
-      router.replace('/login');
-    } else {
+      if (pathname !== '/login' && pathname !== '/register') {
+        router.replace('/login');
+      }
+    } else if (pathname !== '/workspace-intro') {
       router.replace('/');
     }
-  }, [status, router]);
+  }, [status, router, pathname]);
 
   return null;
 }

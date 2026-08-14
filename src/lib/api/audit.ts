@@ -2,7 +2,7 @@
  * TeamShare activity & analytics - mirror of backend /audit (PRD F13).
  */
 
-import { apiFetch } from './client';
+import { apiFetch, apiFetchEnvelope } from './client';
 import type { Paginated } from './types';
 
 export type PriorityKey = 'low' | 'medium' | 'high' | 'urgent';
@@ -46,8 +46,11 @@ export async function getAuditActivity(
   page = 1,
   pageSize = 25
 ): Promise<Paginated<AuditActivityItem>> {
-  return apiFetch<Paginated<AuditActivityItem>>('/audit/activity', {
+  return apiFetchEnvelope<AuditActivityItem[]>('/audit/activity', {
     token,
     query: { page, pageSize, ...(projectId ? { projectId } : {}) },
-  });
+  }).then(({ data, pagination }) => ({
+    items: data,
+    pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+  }));
 }

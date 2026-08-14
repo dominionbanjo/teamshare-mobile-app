@@ -277,8 +277,7 @@ export function EnvVarsTab({ projectId, canAudit = false }: EnvVarsTabProps) {
               last={index === (envVars.data?.items.length ?? 0) - 1}
               revealPending={reveal.isPending && reveal.variables === envVar.id}
               onReveal={() => reveal.mutate(envVar.id)}
-              onDelete={() => remove.mutate(envVar.id)}
-              deletePending={remove.isPending && remove.variables === envVar.id}
+              onDelete={() => remove.mutateAsync(envVar.id)}
             />
           ))}
         </View>
@@ -302,14 +301,12 @@ function EnvVarRow({
   revealPending,
   onReveal,
   onDelete,
-  deletePending,
 }: {
   envVar: EnvVar;
   last: boolean;
   revealPending: boolean;
   onReveal: () => void;
-  onDelete: () => void;
-  deletePending: boolean;
+  onDelete: () => void | Promise<void>;
 }) {
   return (
     <View
@@ -345,11 +342,7 @@ function EnvVarRow({
             accessibilityLabel={`Delete ${envVar.key}`}
             className="h-11 w-11 items-center justify-center rounded-md"
           >
-            {deletePending ? (
-              <ActivityIndicator size="small" color={tokens.error} />
-            ) : (
-              <Trash size={20} variant="Outline" color={tokens.error} />
-            )}
+            <Trash size={20} variant="Outline" color={tokens.error} />
           </Pressable>
         }
       />

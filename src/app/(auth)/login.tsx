@@ -44,7 +44,9 @@ export default function LoginScreen() {
       const outcome = await signInWithGoogle();
       if (outcome !== 'cancelled') {
         await completeGoogle(outcome.code);
-        router.replace('/');
+        // First-time Google logins may not have a workspace yet - the intro
+        // auto-redirects when the account already has companies/projects.
+        router.replace('/workspace-intro');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed.');

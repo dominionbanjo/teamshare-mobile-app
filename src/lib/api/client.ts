@@ -104,3 +104,56 @@ export async function apiFetch<T>(
 
   return payload as T;
 }
+
+/**
+ * Parse the envelope and return `data` + `pagination` (server-side paging).
+ * Mirrors the web client; list endpoints return `data` as the array.
+ */
+export async function apiFetchEnvelope<T>(
+  path: string,
+  options: ApiFetchOptions = {}
+): Promise<{ data: T; pagination?: ApiPagination }> {
+  const { method = 'GET', body, formData, token, query } = options;
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path, query), {
+      method,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(formData ? {} : body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: formData ?? (body !== undefined ? JSON.stringify(body) : undefined),
+    });
+  } catch (cause) {
+    throw new ApiError('Network error - check your connection and try again.', 'NETWORK_ERROR', 0, cause);
+  }
+
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch {
+    // Non-JSON response
+  }
+
+  if (payload && typeof payload === 'object' && 'success' in payload) {
+    const envelope = payload as {
+      success: boolean;
+      data?: T;
+      error?: ApiErrorPayload;
+      pagination?: ApiPagination;
+    };
+    if (envelope.success) return { data: envelope.data as T, pagination: envelope.pagination };
+    throw new ApiError(
+      envelope.error?.message ?? 'Something went wrong.',
+      envelope.error?.code ?? 'UNKNOWN_ERROR',
+      response.status,
+      envelope.error?.details
+    );
+  }
+
+  if (!response.ok) {
+    throw new ApiError(`Request failed (${response.status}).`, 'HTTP_ERROR', response.status);
+  }
+
+  return { data: payload as T };
+}

@@ -107,6 +107,9 @@ export default function CompanyDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.companies });
       router.back();
     },
+    onError: (err) => {
+      Alert.alert('Could not delete company', err.message);
+    },
   });
 
   const changeRole = useMutation({
@@ -213,8 +216,7 @@ export default function CompanyDetailScreen() {
               canManage={canManage}
               rolePending={rolePendingId === member.id}
               onRoleChange={(nextRole) => changeRole.mutate({ membershipId: member.id, nextRole })}
-              onRemove={() => removeMember.mutate(member.id)}
-              removePending={removeMember.isPending && removeMember.variables === member.id}
+              onRemove={() => removeMember.mutateAsync(member.id)}
             />
           ))}
         </View>
@@ -265,12 +267,11 @@ export default function CompanyDetailScreen() {
           title="Delete company?"
           description={`"${companyRow.name}" and all of its teams, projects and data will be permanently deleted. This cannot be undone.`}
           confirmLabel="Delete company"
-          onConfirm={() => removeCompany.mutate()}
+          onConfirm={() => removeCompany.mutateAsync()}
           trigger={
             <TSButton
               variant="destructive"
               icon={<Trash size={16} variant="Outline" color="#fff" />}
-              loading={removeCompany.isPending}
             >
               Delete company
             </TSButton>
@@ -323,15 +324,13 @@ function MemberRow({
   rolePending,
   onRoleChange,
   onRemove,
-  removePending,
 }: {
   member: CompanyMember;
   last: boolean;
   canManage: boolean;
   rolePending: boolean;
   onRoleChange: (role: string) => void;
-  onRemove: () => void;
-  removePending: boolean;
+  onRemove: () => void | Promise<unknown>;
 }) {
   const isOwner = member.role === 'owner';
   return (
@@ -371,11 +370,7 @@ function MemberRow({
                 accessibilityLabel={`Remove ${member.user?.name ?? 'member'}`}
                 className="h-11 w-11 items-center justify-center rounded-md"
               >
-                {removePending ? (
-                  <ActivityIndicator size="small" color={tokens.error} />
-                ) : (
-                  <Trash size={20} variant="Outline" color={tokens.error} />
-                )}
+                <Trash size={20} variant="Outline" color={tokens.error} />
               </Pressable>
             }
           />

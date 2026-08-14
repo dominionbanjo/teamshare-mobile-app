@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import { AddSquare, DocumentText, DocumentUpload, Link21, Trash } from 'iconsax-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Linking, Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 
 import {
   TSAvatar,
@@ -165,9 +165,8 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
               key={doc.id}
               doc={doc}
               last={index === (documents.data?.items.length ?? 0) - 1}
-              deletePending={remove.isPending && remove.variables === doc.id}
               onOpen={() => openDocument(doc)}
-              onDelete={() => remove.mutate(doc.id)}
+              onDelete={() => remove.mutateAsync(doc.id)}
             />
           ))}
         </View>
@@ -185,15 +184,13 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
 function DocumentRow({
   doc,
   last,
-  deletePending,
   onOpen,
   onDelete,
 }: {
   doc: DocumentItem;
   last: boolean;
-  deletePending: boolean;
   onOpen: () => void;
-  onDelete: () => void;
+  onDelete: () => void | Promise<void>;
 }) {
   const typeIcon =
     doc.type === 'link' ? (
@@ -233,11 +230,7 @@ function DocumentRow({
             accessibilityLabel={`Delete ${doc.name}`}
             className="h-11 w-11 items-center justify-center rounded-md"
           >
-            {deletePending ? (
-              <ActivityIndicator size="small" color={tokens.error} />
-            ) : (
-              <Trash size={20} variant="Outline" color={tokens.error} />
-            )}
+            <Trash size={20} variant="Outline" color={tokens.error} />
           </Pressable>
         }
       />

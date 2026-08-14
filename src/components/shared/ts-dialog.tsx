@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, View, type ViewProps } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 
 import { cn } from '@/lib/utils';
 import {
@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -24,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Danger } from 'iconsax-react-native';
 import { tokens } from '@/constants/theme';
+import { TSButton } from './ts-button';
 
 export type TSDialogProps = ViewProps & {
   title?: React.ReactNode;
@@ -69,7 +69,7 @@ export type TSConfirmDialogProps = {
   description: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
-  onConfirm: () => void | Promise<void>;
+  onConfirm: () => void | Promise<unknown>;
   trigger: React.ReactNode;
 };
 
@@ -82,8 +82,23 @@ export function TSConfirmDialog({
   onConfirm,
   trigger,
 }: TSConfirmDialogProps) {
+  const [open, setOpen] = React.useState(false);
+  const [pending, setPending] = React.useState(false);
+
+  const handleConfirm = async () => {
+    setPending(true);
+    try {
+      await onConfirm();
+      setOpen(false);
+    } catch {
+      // Keep the dialog open so the caller can surface the error (toast).
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent className="max-w-[420px] rounded-xl">
         <AlertDialogHeader>
@@ -99,11 +114,11 @@ export function TSConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel asChild>
-            <Text className="text-sm font-medium text-foreground">{cancelLabel}</Text>
+            <TSButton variant="outline" disabled={pending}>{cancelLabel}</TSButton>
           </AlertDialogCancel>
-          <AlertDialogAction asChild onPress={() => void onConfirm()}>
-            <Text className="text-sm font-medium text-white">{confirmLabel}</Text>
-          </AlertDialogAction>
+          <TSButton variant="destructive" loading={pending} onPress={() => void handleConfirm()}>
+            {confirmLabel}
+          </TSButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

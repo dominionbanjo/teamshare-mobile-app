@@ -34,6 +34,7 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="workspace-intro" options={{ headerShown: false }} />
             <Stack.Screen name="projects/[id]" options={{ title: 'Project' }} />
             <Stack.Screen name="tasks/[id]" options={{ title: 'Task' }} />
             <Stack.Screen name="companies/index" options={{ title: 'Companies' }} />

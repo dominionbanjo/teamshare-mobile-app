@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch, apiFetchEnvelope } from './client';
 import type { DocumentItem, Paginated } from './types';
 
 export interface CreateDocumentLinkPayload {
@@ -14,16 +14,22 @@ export async function listDocuments(
   page = 1,
   pageSize = 100
 ): Promise<Paginated<DocumentItem>> {
-  return apiFetch<Paginated<DocumentItem>>(`/projects/${projectId}/documents`, { token, query: { page, pageSize } });
+  return apiFetchEnvelope<DocumentItem[]>('/documents', {
+    token,
+    query: { projectId, page, pageSize },
+  }).then(({ data, pagination }) => ({
+    items: data,
+    pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+  }));
 }
 
 export async function createDocumentLink(token: string, payload: CreateDocumentLinkPayload): Promise<DocumentItem> {
-  return apiFetch<DocumentItem>('/documents', { method: 'POST', body: payload, token });
+  return apiFetch<DocumentItem>('/documents/link', { method: 'POST', body: payload, token });
 }
 
 /** Upload a document file - multipart form (projectId, name, type=file, file). */
 export async function uploadDocumentFile(token: string, formData: FormData): Promise<DocumentItem> {
-  return apiFetch<DocumentItem>('/documents', { method: 'POST', formData, token });
+  return apiFetch<DocumentItem>('/documents/upload', { method: 'POST', formData, token });
 }
 
 export async function deleteDocument(token: string, id: string): Promise<void> {

@@ -31,3 +31,18 @@ export async function updateSessionUser(user: User): Promise<void> {
 export async function clearSession(): Promise<void> {
   await AsyncStorage.removeItem(SESSION_KEY);
 }
+
+const ONBOARDED_KEY = 'teamshare.onboarded';
+
+/** Marks the workspace-intro as completed (personal or company chosen). */
+export async function setOnboarded(): Promise<void> {
+  await AsyncStorage.setItem(ONBOARDED_KEY, '1');
+}
+
+export async function loadOnboarded(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(ONBOARDED_KEY)) === '1';
+  } catch {
+    return false;
+  }
+}

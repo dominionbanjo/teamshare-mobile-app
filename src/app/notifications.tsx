@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { NotificationBing, Notification } from 'iconsax-react-native';
 import * as React from 'react';
-import { Pressable, RefreshControl, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import {
   TSEmptyState,
@@ -82,10 +82,12 @@ export default function NotificationsScreen() {
           {notifications.data.items.map((notification, index) => {
             const isRead = !!notification.readAt;
             const isLast = index === notifications.data!.items.length - 1;
+            const rowPending = markRead.isPending && markRead.variables?.id === notification.id;
             return (
               <Pressable
                 key={notification.id}
                 onPress={() => openNotification(notification)}
+                disabled={rowPending}
                 className={cn(
                   'min-h-12 flex-row items-start gap-3 px-4 py-3',
                   index > 0 && 'border-t border-border',
@@ -93,7 +95,9 @@ export default function NotificationsScreen() {
                   !isRead && 'bg-muted'
                 )}
               >
-                {isRead ? (
+                {rowPending ? (
+                  <ActivityIndicator size="small" color={tokens.primary} />
+                ) : isRead ? (
                   <Notification size={18} variant="Outline" color={tokens.textMuted} />
                 ) : (
                   <NotificationBing size={18} variant="Bold" color={tokens.primary} />

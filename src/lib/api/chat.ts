@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch, apiFetchEnvelope } from './client';
 import type { ChatMessage, Paginated } from './types';
 
 export interface SendChatMessagePayload {
@@ -13,7 +13,12 @@ export async function listChatMessages(
   page = 1,
   pageSize = 100
 ): Promise<Paginated<ChatMessage>> {
-  return apiFetch<Paginated<ChatMessage>>('/chat/messages', { token, query: { projectId, page, pageSize } });
+  return apiFetchEnvelope<ChatMessage[]>('/chat/messages', { token, query: { projectId, page, pageSize } }).then(
+    ({ data, pagination }) => ({
+      items: data,
+      pagination: pagination ?? { page, pageSize, total: data.length, totalPages: 1 },
+    })
+  );
 }
 
 export async function sendChatMessage(token: string, payload: SendChatMessagePayload): Promise<ChatMessage> {

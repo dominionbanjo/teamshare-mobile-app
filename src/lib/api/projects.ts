@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch, apiFetchEnvelope } from './client';
 import type { Paginated, Project, ProjectMember, Task } from './types';
 
 export interface CreateProjectPayload {
@@ -7,8 +7,16 @@ export interface CreateProjectPayload {
   companyId?: string;
 }
 
+async function toPaginated<T>(result: { data: T[]; pagination?: Paginated<T>['pagination'] }): Promise<Paginated<T>> {
+  return {
+    items: result.data,
+    pagination:
+      result.pagination ?? { page: 1, pageSize: 50, total: result.data.length, totalPages: 1 },
+  };
+}
+
 export async function listProjects(token: string, page = 1, pageSize = 50): Promise<Paginated<Project>> {
-  return apiFetch<Paginated<Project>>('/projects', { token, query: { page, pageSize } });
+  return apiFetchEnvelope<Project[]>('/projects', { token, query: { page, pageSize } }).then(toPaginated);
 }
 
 export async function getProject(token: string, id: string): Promise<Project> {
@@ -25,7 +33,9 @@ export async function listProjectTasks(
   page = 1,
   pageSize = 100
 ): Promise<Paginated<Task>> {
-  return apiFetch<Paginated<Task>>(`/projects/${projectId}/tasks`, { token, query: { page, pageSize } });
+  return apiFetchEnvelope<Task[]>(`/projects/${projectId}/tasks`, { token, query: { page, pageSize } }).then(
+    toPaginated
+  );
 }
 
 export async function listProjectMembers(
@@ -34,5 +44,10 @@ export async function listProjectMembers(
   page = 1,
   pageSize = 100
 ): Promise<Paginated<ProjectMember>> {
-  return apiFetch<Paginated<ProjectMember>>(`/projects/${projectId}/members`, { token, query: { page, pageSize } });
+  return apiFetch<{ items: ProjectMember[] }>(`/projects/${projectId}/members`, { token }).then(
+    ({ items }) => ({
+      items,
+      pagination: { page, pageSize, total: items.length, totalPages: 1 },
+    })
+  );
 }
