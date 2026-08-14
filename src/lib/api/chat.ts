@@ -27,3 +27,19 @@ export async function listChatMessages(
 export async function sendChatMessage(token: string, payload: SendChatMessagePayload): Promise<ChatMessage> {
   return apiFetch<ChatMessage>('/chat/messages', { method: 'POST', body: payload, token });
 }
+
+/** Edit an own message (10-minute window). */
+export async function editChatMessage(token: string, messageId: string, body: string): Promise<ChatMessage> {
+  return apiFetch<ChatMessage>(`/chat/messages/${messageId}`, { method: 'PATCH', body: { body }, token });
+}
+
+/** Delete a message (author or project owner). */
+export async function deleteChatMessage(
+  token: string,
+  messageId: string
+): Promise<{ id: string; deleted: boolean }> {
+  return apiFetch<{ id: string; deleted: boolean }>(`/chat/messages/${messageId}`, {
+    method: 'DELETE',
+    token,
+  });
+}

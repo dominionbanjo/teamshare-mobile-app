@@ -8,6 +8,7 @@ import { useColorScheme } from 'react-native';
 import { PortalHost } from '@rn-primitives/portal';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthGate, AuthProvider } from '@/lib/auth/auth-context';
+import { NotificationSocketBridge } from '@/lib/realtime/notification-socket';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,6 +25,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <AuthGate />
+          <NotificationSocketBridge />
           <Stack
             screenOptions={{
               headerTintColor: colorScheme === 'dark' ? DefaultTheme.colors.text : '#fff',

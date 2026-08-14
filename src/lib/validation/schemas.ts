@@ -62,8 +62,15 @@ export type ApiKeyScope = z.infer<typeof ApiKeyScopeSchema>;
 
 export const WebhookEventSchema = z.enum([
   'task.created',
+  'task.updated',
   'task.resolved',
   'comment.created',
+  'chat.message_created',
+  'env_var.created',
+  'env_var.updated',
+  'env_var.revealed',
+  'document.created',
+  'invitation.accepted',
 ]);
 export type WebhookEvent = z.infer<typeof WebhookEventSchema>;
 

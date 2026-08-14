@@ -266,6 +266,7 @@ export interface ChatMessage {
   attachmentUrl?: string | null;
   attachmentName?: string | null;
   attachmentMime?: string | null;
+  editedAt?: string | null;
   createdAt: string;
   author?: User | null;
 }
