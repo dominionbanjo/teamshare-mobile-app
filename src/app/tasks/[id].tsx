@@ -23,6 +23,7 @@ import {
   TSScreen,
   TSSkeletonList,
 } from '@/components/shared';
+import { TSAgentBadge } from '@/components/agents/agent-avatar';
 import { createComment, listTaskComments } from '@/lib/api/comments';
 import { listProjectMembers } from '@/lib/api/projects';
 import { getTask, unwatchTask, watchTask } from '@/lib/api/tasks';
@@ -248,6 +249,7 @@ export default function TaskDetailScreen() {
               <Text className="text-sm text-muted-foreground">
                 Assignee: {taskRow.assignee?.name ?? 'Unassigned'}
               </Text>
+              {taskRow.assignee?.kind === 'agent' && <TSAgentBadge />}
             </View>
             <Text className="text-sm text-muted-foreground">
               Due: {taskRow.dueDate ? formatDateTime(taskRow.dueDate) : 'No due date'}
@@ -492,6 +494,7 @@ function CommentBody({ comment, memberNames }: { comment: Comment; memberNames: 
       <View className="flex-row items-center gap-2">
         <TSAvatar name={comment.author?.name ?? 'Unknown'} src={comment.author?.avatarUrl} size={24} />
         <Text className="text-sm font-semibold text-foreground">{comment.author?.name ?? 'Unknown'}</Text>
+        {comment.author?.kind === 'agent' && <TSAgentBadge />}
         <Text className="text-xs text-muted-foreground">{formatRelative(comment.createdAt)}</Text>
       </View>
       <TSMentionText body={comment.body} names={memberNames} />

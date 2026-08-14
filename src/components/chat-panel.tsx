@@ -26,6 +26,7 @@ import {
   TSMentionText,
   TSSkeletonList,
 } from '@/components/shared';
+import { TSAgentBadge } from '@/components/agents/agent-avatar';
 import {
   deleteChatMessage,
   editChatMessage,
@@ -622,6 +623,7 @@ function MessageBubble({
         <View className="mb-1 flex-row items-center gap-1.5">
           <TSAvatar name={authorName} src={!temp ? message.author?.avatarUrl : undefined} size={20} />
           <Text className="text-xs font-semibold text-foreground">{authorName}</Text>
+          {!temp && message.author?.kind === 'agent' && <TSAgentBadge />}
         </View>
       )}
       <View

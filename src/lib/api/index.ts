@@ -2,6 +2,7 @@ export * from './client';
 export * from './types';
 export * from './auth';
 export * from './companies';
+export * from './agents';
 export * from './teams';
 export * from './projects';
 export * from './tasks';

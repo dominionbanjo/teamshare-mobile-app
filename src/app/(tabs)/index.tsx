@@ -120,6 +120,12 @@ export default function HomeScreen() {
               <Text className="text-sm font-medium text-foreground">Companies</Text>
             </Pressable>
             <Pressable
+              onPress={() => router.push('/agents')}
+              className="min-h-11 w-[calc(50%-6px)] items-center justify-center rounded-lg border border-border bg-background"
+            >
+              <Text className="text-sm font-medium text-foreground">Agents</Text>
+            </Pressable>
+            <Pressable
               onPress={() => router.push('/invitations')}
               className="min-h-11 w-[calc(50%-6px)] items-center justify-center rounded-lg border border-border bg-background"
             >

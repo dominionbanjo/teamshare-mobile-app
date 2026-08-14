@@ -198,3 +198,62 @@ export const ProjectInviteSchema = z.object({
   role: ProjectRoleSchema.default('member'),
 });
 export type ProjectInviteInput = z.infer<typeof ProjectInviteSchema>;
+
+// ---------------------------------------------------------------- agents
+// Mirrors Agent Hub contract (docs/agent-tasks/agent-hub-connection.md) and
+// the web app's agent additions - backend is canonical.
+
+/** Prisma UserKind - agents are users with kind = "agent". */
+export const AgentKindSchema = z.enum(['human', 'agent']);
+export type AgentKind = z.infer<typeof AgentKindSchema>;
+
+export const AgentStatusSchema = z.enum(['offline', 'online', 'working']);
+export type AgentStatus = z.infer<typeof AgentStatusSchema>;
+
+export const AgentCapabilitySchema = z.enum([
+  'tasks:read',
+  'tasks:create',
+  'tasks:update',
+  'tasks:assign',
+  'comments:create',
+  'chat:read',
+  'chat:write',
+  'documents:read',
+  'search',
+  'projects:read',
+]);
+export type AgentCapability = z.infer<typeof AgentCapabilitySchema>;
+export const AGENT_CAPABILITIES = AgentCapabilitySchema.options;
+
+export const AgentLogActionSchema = z.enum([
+  'run_started',
+  'run_completed',
+  'task_created',
+  'task_updated',
+  'comment_created',
+  'chat_message',
+  'wake_sent',
+  'error',
+]);
+export type AgentLogAction = z.infer<typeof AgentLogActionSchema>;
+
+export const CreateAgentSchema = z.object({
+  name: nameSchema,
+  /** Free-text model hint (e.g. "deepseek-chat"); backend defaults. */
+  model: z.string().trim().max(120).optional(),
+  systemPrompt: z.string().max(8_000).optional(),
+  capabilities: z.array(AgentCapabilitySchema).min(1, 'Pick at least one capability'),
+  /** null/absent = personal agent; a uuid = company-scoped agent. */
+  companyId: uuidSchema.nullable().optional(),
+});
+export type CreateAgentInput = z.infer<typeof CreateAgentSchema>;
+
+export const UpdateAgentSchema = z.object({
+  name: nameSchema.optional(),
+  model: z.string().trim().max(120).optional(),
+  systemPrompt: z.string().max(8_000).optional(),
+  capabilities: z.array(AgentCapabilitySchema).min(1, 'Pick at least one capability').optional(),
+  /** false = paused (archived): stops waking, tasks stay assigned. */
+  active: z.boolean().optional(),
+});
+export type UpdateAgentInput = z.infer<typeof UpdateAgentSchema>;

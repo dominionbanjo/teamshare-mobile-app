@@ -23,6 +23,8 @@ import {
   TSSkeletonList,
   TSTabs,
 } from '@/components/shared';
+import { AgentListSection } from '@/components/agents/agent-list-section';
+import { CreateAgentDialog } from '@/components/agents/create-agent-dialog';
 import {
   deleteCompany,
   deleteMembership,
@@ -60,6 +62,7 @@ export default function CompanyDetailScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [inviteOpen, setInviteOpen] = React.useState(false);
+  const [agentCreateOpen, setAgentCreateOpen] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [rolePendingId, setRolePendingId] = React.useState<string | null>(null);
 
@@ -287,6 +290,28 @@ export default function CompanyDetailScreen() {
     </TSCard>
   );
 
+  const agentsContent = (
+    <View className="gap-3">
+      <View className="flex-row items-center justify-between">
+        <Text className="text-base font-semibold text-foreground">Agents</Text>
+        {canManage && (
+          <TSButton
+            tsSize="sm"
+            onPress={() => setAgentCreateOpen(true)}
+            icon={<AddSquare size={16} variant="Outline" color="#fff" />}
+          >
+            New agent
+          </TSButton>
+        )}
+      </View>
+      <AgentListSection
+        companyId={id}
+        onCreatePress={canManage ? () => setAgentCreateOpen(true) : undefined}
+      />
+      <CreateAgentDialog open={agentCreateOpen} onOpenChange={setAgentCreateOpen} companyId={id} />
+    </View>
+  );
+
   return (
     <TSScreen>
       <TSPageHeader
@@ -310,6 +335,7 @@ export default function CompanyDetailScreen() {
             count: memberRows.length,
             content: membersContent,
           },
+          { value: 'agents', label: 'Agents', content: agentsContent },
           { value: 'settings', label: 'Settings', content: settingsContent },
         ]}
       />

@@ -46,6 +46,8 @@ export default function RootLayout() {
             <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
             <Stack.Screen name="analytics" options={{ title: 'Analytics' }} />
             <Stack.Screen name="billing" options={{ title: 'Billing' }} />
+            <Stack.Screen name="agents/index" options={{ title: 'Agents' }} />
+            <Stack.Screen name="agents/[id]" options={{ title: 'Agent' }} />
           </Stack>
           <PortalHost />
           <AnimatedSplashOverlay />

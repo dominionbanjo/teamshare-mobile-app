@@ -10,6 +10,10 @@ import type { ApiPagination } from './client';
  * schemas that mirror the backend contract).
  */
 import type {
+  AgentCapabilityValue,
+  AgentKindValue,
+  AgentLogActionValue,
+  AgentStatusValue,
   CompanyRoleValue,
   DocumentTypeValue,
   EnvTierValue,
@@ -22,6 +26,10 @@ import type {
   TaskStatusValue,
 } from '@/constants/enums';
 export type {
+  AgentCapabilityValue,
+  AgentKindValue,
+  AgentLogActionValue,
+  AgentStatusValue,
   CompanyRoleValue,
   DocumentTypeValue,
   EnvTierValue,
@@ -39,6 +47,8 @@ export interface User {
   name: string;
   email: string;
   avatarUrl?: string | null;
+  /** Prisma UserKind - "agent" for AI crew members (Agent Hub contract). */
+  kind?: AgentKindValue;
   createdAt: string;
 }
 
@@ -269,4 +279,47 @@ export interface ChatMessage {
   editedAt?: string | null;
   createdAt: string;
   author?: User | null;
+}
+
+// ---------------------------------------------------------------- agents
+// Agent Hub contract: docs/agent-tasks/agent-hub-connection.md
+
+/** Mirrors backend AgentService list/detail payloads. */
+export interface Agent {
+  id: string;
+  name: string;
+  model?: string | null;
+  systemPrompt?: string | null;
+  capabilities: AgentCapabilityValue[];
+  /** false = paused (archived): no wakes, tasks stay assigned. */
+  active: boolean;
+  status: AgentStatusValue;
+  companyId?: string | null;
+  createdBy: string;
+  createdAt: string;
+  lastSeenAt?: string | null;
+  lastCheckedAt?: string | null;
+  /** Backend addition (P2) - degrade gracefully when absent. */
+  lastRunAt?: string | null;
+  user?: Pick<User, 'id' | 'name' | 'avatarUrl' | 'kind'> | null;
+  /** Project memberships from GET /agents/:id (detail only). */
+  memberships?: { projectId: string }[] | null;
+  _count?: { tasks: number; logs: number };
+}
+
+/** POST /agents response - plaintext API key shown exactly once. */
+export interface AgentCreated {
+  agent: Agent;
+  token: string;
+}
+
+/** AgentLog row (GET /agents/:id/logs). */
+export interface AgentLogRow {
+  id: string;
+  agentId: string;
+  action: AgentLogActionValue;
+  taskId?: string | null;
+  task?: { id: string; title: string } | null;
+  detail?: unknown;
+  createdAt: string;
 }

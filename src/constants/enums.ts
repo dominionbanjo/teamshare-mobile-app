@@ -1,4 +1,8 @@
 import {
+  AgentCapabilitySchema,
+  AgentKindSchema,
+  AgentLogActionSchema,
+  AgentStatusSchema,
   ApiKeyScopeSchema,
   CompanyRoleSchema,
   DocumentTypeSchema,
@@ -134,3 +138,48 @@ export const TASK_STATUS_TRANSITIONS: Record<
   [TaskStatusEnum.resolved]: [TaskStatusEnum.closed, TaskStatusEnum.open],
   [TaskStatusEnum.closed]: [TaskStatusEnum.open],
 };
+
+// ---------------------------------------------------------------- agents
+// Agent Hub contract: docs/agent-tasks/agent-hub-connection.md
+
+export const AgentKindEnum = AgentKindSchema.enum;
+export const AGENT_KIND_VALUES = AgentKindSchema.options;
+export type AgentKindValue = (typeof AGENT_KIND_VALUES)[number];
+
+export const AgentStatusEnum = AgentStatusSchema.enum;
+export const AGENT_STATUS_VALUES = AgentStatusSchema.options;
+export type AgentStatusValue = (typeof AGENT_STATUS_VALUES)[number];
+
+export const AgentCapabilityEnum = AgentCapabilitySchema.enum;
+export const AGENT_CAPABILITY_VALUES = AgentCapabilitySchema.options;
+export type AgentCapabilityValue = (typeof AGENT_CAPABILITY_VALUES)[number];
+
+export const AgentLogActionEnum = AgentLogActionSchema.enum;
+export const AGENT_LOG_ACTION_VALUES = AgentLogActionSchema.options;
+export type AgentLogActionValue = (typeof AGENT_LOG_ACTION_VALUES)[number];
+
+/** Capability groups shown in create/edit UIs (Read / Work / Communicate). */
+export const AGENT_CAPABILITY_GROUPS: Record<
+  'read' | 'work' | 'communicate',
+  { label: string; capabilities: AgentCapabilityValue[] }
+> = {
+  read: {
+    label: 'Read',
+    capabilities: ['tasks:read', 'chat:read', 'documents:read', 'search', 'projects:read'],
+  },
+  work: {
+    label: 'Work',
+    capabilities: ['tasks:create', 'tasks:update', 'tasks:assign'],
+  },
+  communicate: {
+    label: 'Communicate',
+    capabilities: ['comments:create', 'chat:write'],
+  },
+};
+
+/**
+ * Default capability set for new agents - everything except `tasks:assign`
+ * (assigning people is deliberately off by default, per the contract).
+ */
+export const AGENT_DEFAULT_CAPABILITIES: AgentCapabilityValue[] =
+  AGENT_CAPABILITY_VALUES.filter((capability) => capability !== 'tasks:assign');

@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { ArrowRight2, Building4, Chart, Element, Key, WalletMoney } from 'iconsax-react-native';
+import { ArrowRight2, Building4, Chart, Element, Key, Radar, WalletMoney } from 'iconsax-react-native';
 import * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -83,6 +83,13 @@ export default function SettingsScreen() {
             title="Companies"
             note="Organizations, members and roles"
             onPress={() => router.push('/companies')}
+          />
+          <View className="h-px bg-border" />
+          <SettingsRow
+            icon={<Radar size={16} variant="Outline" color={tokens.violet} />}
+            title="Agents"
+            note="Your AI crew - tasks, runs and keys"
+            onPress={() => router.push('/agents')}
           />
           <View className="h-px bg-border" />
           <SettingsRow
