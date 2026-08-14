@@ -32,6 +32,14 @@ export async function uploadDocumentFile(token: string, formData: FormData): Pro
   return apiFetch<DocumentItem>('/documents/upload', { method: 'POST', formData, token });
 }
 
+/** Cloudinary-hosted file document: presign -> upload -> record the secure_url. */
+export async function createHostedDocument(
+  token: string,
+  payload: { projectId: string; name: string; mime: string; url: string }
+): Promise<DocumentItem> {
+  return apiFetch<DocumentItem>('/documents', { method: 'POST', body: payload, token });
+}
+
 export async function deleteDocument(token: string, id: string): Promise<void> {
   return apiFetch<void>(`/documents/${id}`, { method: 'DELETE', token });
 }

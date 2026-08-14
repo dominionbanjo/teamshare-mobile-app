@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
-import { AddSquare, DocumentText, DocumentUpload, Link21, Trash } from 'iconsax-react-native';
+import { DocumentText, DocumentUpload, Link21, Trash } from 'iconsax-react-native';
 import * as React from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 
@@ -17,7 +17,13 @@ import {
   TSSkeletonList,
 } from '@/components/shared';
 import { API_BASE_URL } from '@/lib/api/client';
-import { createDocumentLink, deleteDocument, listDocuments, uploadDocumentFile } from '@/lib/api/documents';
+import {
+  createDocumentLink,
+  createHostedDocument,
+  deleteDocument,
+  listDocuments,
+} from '@/lib/api/documents';
+import { presignAttachment, uploadToCloudinary } from '@/lib/api/uploads';
 import type { DocumentItem } from '@/lib/api/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { formatRelative } from '@/lib/format';
@@ -53,7 +59,22 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
   });
 
   const upload = useMutation({
-    mutationFn: (formData: FormData) => uploadDocumentFile(token ?? '', formData),
+    mutationFn: async (asset: { uri: string; name: string; mime: string }) => {
+      // Cloudinary direct upload: presign (folder `documents`) -> upload -> record URL.
+      const { uploadUrl, formParams } = await presignAttachment(
+        token ?? '',
+        asset.name,
+        asset.mime,
+        'documents'
+      );
+      const secureUrl = await uploadToCloudinary(uploadUrl, formParams, asset);
+      return createHostedDocument(token ?? '', {
+        projectId,
+        name: asset.name,
+        mime: asset.mime,
+        url: secureUrl,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projectDocuments(projectId) });
     },
@@ -71,23 +92,18 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
       const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
       if (result.canceled || result.assets.length === 0) return;
       const asset = result.assets[0];
-      const formData = new FormData();
-      formData.append('projectId', projectId);
-      formData.append('name', asset.name);
-      formData.append('type', 'file');
-      formData.append('file', {
+      upload.mutate({
         uri: asset.uri,
         name: asset.name,
-        type: asset.mimeType ?? 'application/octet-stream',
-      } as unknown as Blob);
-      upload.mutate(formData);
+        mime: asset.mimeType ?? 'application/octet-stream',
+      });
     } catch (err) {
       console.warn('Document picker failed:', err);
     }
   };
 
   const openDocument = (doc: DocumentItem) => {
-    if (doc.type === 'link') {
+    if (doc.type === 'link' || /^https?:\/\//i.test(doc.urlOrKey)) {
       void Linking.openURL(doc.urlOrKey);
     } else {
       void Linking.openURL(`${API_ORIGIN}${doc.urlOrKey.startsWith('/') ? '' : '/'}${doc.urlOrKey}`);

@@ -249,9 +249,10 @@ export interface DocumentItem {
   id: string;
   projectId: string;
   type: DocumentTypeValue;
-  /** http(s) URL for links; storage key/path for files. */
+  /** http(s) URL for links; storage key/path or Cloudinary URL for files. */
   urlOrKey: string;
   name: string;
+  mime?: string | null;
   uploadedBy: string;
   createdAt: string;
   uploader?: User | null;
@@ -262,6 +263,9 @@ export interface ChatMessage {
   projectId: string;
   authorId: string;
   body: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  attachmentMime?: string | null;
   createdAt: string;
   author?: User | null;
 }

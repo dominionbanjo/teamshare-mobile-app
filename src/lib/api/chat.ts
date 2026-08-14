@@ -4,6 +4,9 @@ import type { ChatMessage, Paginated } from './types';
 export interface SendChatMessagePayload {
   projectId: string;
   body: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentMime?: string;
 }
 
 /** Chat history for a project channel. Live traffic flows over socket.io. */

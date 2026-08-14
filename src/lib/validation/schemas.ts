@@ -109,9 +109,9 @@ export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 
 export const UpdateTaskSchema = CreateTaskSchema.omit({ projectId: true }).partial();
 
-// Allowed status transitions (PRD s6.4 state machine) — canonical in
-// src/constants/enums.ts.
-export { TASK_STATUS_TRANSITIONS } from '@/constants/enums';
+// Allowed status transitions (PRD s6.4 state machine) live in
+// src/constants/enums.ts (import from there; re-exporting here would
+// create an import cycle schemas <-> enums).
 
 export const CreateCommentSchema = z.object({
   taskId: uuidSchema,

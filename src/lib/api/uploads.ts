@@ -23,7 +23,7 @@ export async function presignAttachment(
   token: string,
   fileName: string,
   mime: string,
-  folder: 'task' | 'comment' | 'chat' = 'task'
+  folder: 'task' | 'comment' | 'chat' | 'documents' = 'task'
 ): Promise<{ uploadUrl: string; formParams: Record<string, string> }> {
   return apiFetch<{ uploadUrl: string; formParams: Record<string, string> }>('/attachments/presign', {
     method: 'POST',
@@ -76,7 +76,7 @@ export async function uploadAttachmentCloudinary(
   token: string,
   payload: CreateAttachmentPayload,
   file: LocalFile,
-  folder: 'task' | 'comment' | 'chat' = 'task'
+  folder: 'task' | 'comment' | 'chat' | 'documents' = 'task'
 ): Promise<Attachment> {
   const { uploadUrl, formParams } = await presignAttachment(token, file.name, file.mime, folder);
   const secureUrl = await uploadToCloudinary(uploadUrl, formParams, file);
