@@ -1,8 +1,9 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { ArrowRight2, Building4, Chart, Element, Key, Radar, WalletMoney } from 'iconsax-react-native';
+import { ArrowRight2, Building4, Chart, Element, Key, NotificationBing, Radar, WalletMoney } from 'iconsax-react-native';
 import * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   TSConfirmDialog,
@@ -11,8 +12,11 @@ import {
   TSScreen,
   TSAvatar,
   TSButton,
+  TSSwitch,
 } from '@/components/shared';
 import { useAuth } from '@/lib/auth/auth-context';
+import { getNotificationSettings, updateNotificationSettings } from '@/lib/api/notifications';
+import { queryKeys } from '@/lib/query/keys';
 import { cn } from '@/lib/utils';
 import { tokens } from '@/constants/theme';
 
@@ -49,9 +53,33 @@ function SettingsRow({ icon, title, note, onPress }: SettingsRowProps) {
 }
 
 export default function SettingsScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [logoutPending, setLogoutPending] = React.useState(false);
+
+  const settingsQuery = useQuery({
+    queryKey: queryKeys.notificationSettings,
+    queryFn: () => getNotificationSettings(token ?? ''),
+    enabled: !!token,
+  });
+
+  const updateSetting = useMutation({
+    mutationFn: ({ key, value }: { key: string; value: boolean }) =>
+      updateNotificationSettings(token ?? '', { [key]: value }),
+    onError: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notificationSettings });
+    },
+  });
+
+  const settings = settingsQuery.data;
+  const toggle = (key: string, value: boolean) => {
+    // Optimistic flip, reconciled by the mutation + refetch.
+    queryClient.setQueryData(queryKeys.notificationSettings, (prev: typeof settings) =>
+      prev ? { ...prev, [key]: value } : prev
+    );
+    updateSetting.mutate({ key, value });
+  };
 
   const handleLogout = async () => {
     setLogoutPending(true);
@@ -61,6 +89,17 @@ export default function SettingsScreen() {
       setLogoutPending(false);
     }
   };
+
+  const notificationToggles: { key: string; label: string; note: string }[] = [
+    { key: 'mentions', label: 'Mentions', note: '@name mentions in comments and chat' },
+    { key: 'assignments', label: 'Assignments', note: 'Tasks and subtasks assigned to you' },
+    { key: 'comments', label: 'Comments', note: 'Replies on tasks you watch' },
+    { key: 'resolutions', label: 'Resolutions', note: 'Tasks marked resolved' },
+    { key: 'taskUpdates', label: 'Task updates', note: 'Started, reopened and closed tasks' },
+    { key: 'dueDates', label: 'Due dates', note: 'Tasks due within 24 hours' },
+    { key: 'invites', label: 'Invitations', note: 'Company and project invites' },
+    { key: 'digest', label: 'Daily digest', note: 'One summary email per day' },
+  ];
 
   return (
     <TSScreen>
@@ -73,6 +112,30 @@ export default function SettingsScreen() {
             <Text className="text-base font-semibold text-foreground">{user?.name ?? '—'}</Text>
             <Text className="text-sm text-muted-foreground">{user?.email ?? '—'}</Text>
           </View>
+        </View>
+      </TSCard>
+
+      <TSCard title="Notifications" description="Which updates reach you (IMP-250)">
+        <View className="-mx-4">
+          {notificationToggles.map((item, index) => {
+            const checked = settings ? Boolean(settings[item.key as keyof typeof settings]) : false;
+            return (
+              <View key={item.key}>
+                {index > 0 && <View className="h-px bg-border" />}
+                <View className="min-h-11 flex-row items-center gap-3 px-4 py-2.5">
+                  <View className="flex-1">
+                    <Text className="text-sm font-medium text-foreground">{item.label}</Text>
+                    <Text className="text-xs text-muted-foreground">{item.note}</Text>
+                  </View>
+                  <TSSwitch
+                    checked={checked}
+                    disabled={!settings || updateSetting.isPending}
+                    onValueChange={(value) => toggle(item.key, value)}
+                  />
+                </View>
+              </View>
+            );
+          })}
         </View>
       </TSCard>
 

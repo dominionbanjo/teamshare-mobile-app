@@ -3,6 +3,11 @@ import { usePathname, useRouter } from 'expo-router';
 
 import * as authApi from '@/lib/api/auth';
 import { clearSession, loadSession, saveSession, updateSessionUser } from '@/lib/api/session';
+import {
+  clearTokenPair,
+  onTokenRefreshed,
+  setTokenPair,
+} from '@/lib/auth/token-refresh';
 import type { AuthResponse, User } from '@/lib/api/types';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -32,6 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const session = await loadSession();
       if (cancelled) return;
       if (session?.tokens.accessToken && session.user) {
+        // Mirror the session into the token-refresh module so the API client
+        // can rotate the access token on 401 (IMP-250).
+        setTokenPair(session.tokens.accessToken, session.tokens.refreshToken);
         setToken(session.tokens.accessToken);
         setUser(session.user);
         setStatus('authenticated');
@@ -45,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .catch(async () => {
             if (cancelled) return;
             await clearSession();
+            clearTokenPair();
             setUser(null);
             setToken(null);
             setStatus('unauthenticated');
@@ -53,14 +62,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setStatus('unauthenticated');
       }
     })();
+    // Keep React state in sync when the API client rotates the access token.
+    const unsubscribe = onTokenRefreshed((next) => setToken(next));
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, []);
 
   const applyAuth = React.useCallback(async (response: AuthResponse) => {
     const session = { user: response.user, tokens: response.tokens };
     await saveSession(session);
+    setTokenPair(response.tokens.accessToken, response.tokens.refreshToken);
     setUser(response.user);
     setToken(response.tokens.accessToken);
     setStatus('authenticated');
@@ -84,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = React.useCallback(async () => {
     await clearSession();
+    clearTokenPair();
     setUser(null);
     setToken(null);
     setStatus('unauthenticated');

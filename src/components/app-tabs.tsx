@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tokens } from '@/constants/theme';
 import { cn } from '@/lib/utils';
+import { useUnreadCount } from '@/lib/realtime/notification-socket';
 
 type TabDef = {
   name: string;
@@ -24,21 +25,33 @@ const TABS: TabDef[] = [
 
 export type TabButtonProps = TabTriggerSlotProps & {
   tab: TabDef;
+  /** Unread badge count (IMP-250) - shown on the Home tab. */
+  badge?: number;
 };
 
 /** Tab bar button - 44px touch target, IconSax Outline when idle / Bold when focused (style guide 6.4). */
-export function TabButton({ tab, isFocused, ...props }: TabButtonProps) {
+export function TabButton({ tab, isFocused, badge, ...props }: TabButtonProps) {
   const { Icon } = tab;
   return (
     <Pressable
       {...props}
       className={cn('min-h-11 flex-1 items-center justify-center gap-0.5 rounded-lg', props.className)}
     >
-      <Icon
-        size={22}
-        variant={isFocused ? 'Bold' : 'Outline'}
-        color={isFocused ? tokens.primary : tokens.textSecondary}
-      />
+      <View className="relative">
+        <Icon
+          size={22}
+          variant={isFocused ? 'Bold' : 'Outline'}
+          color={isFocused ? tokens.primary : tokens.textSecondary}
+        />
+        {badge != null && badge > 0 && (
+          <View
+            className="absolute -right-2 -top-1.5 min-w-4 items-center rounded-full px-1"
+            style={{ backgroundColor: tokens.error, paddingVertical: 1 }}
+          >
+            <Text className="text-[10px] font-bold text-white">{badge > 99 ? '99+' : badge}</Text>
+          </View>
+        )}
+      </View>
       <Text
         className={cn(
           'text-[10px] font-medium',
@@ -54,10 +67,11 @@ export function TabButton({ tab, isFocused, ...props }: TabButtonProps) {
 /**
  * TeamShare app shell - headless bottom tab bar rendered with IconSax icons.
  * Routes: Home (/), Projects (/projects), Tasks (/tasks), Search (/search),
- * Settings (/settings).
+ * Settings (/settings). The Home tab shows the unread notification badge.
  */
 export default function AppTabs() {
   const insets = useSafeAreaInsets();
+  const { data: unread } = useUnreadCount();
   return (
     <Tabs>
       <TabSlot style={{ flex: 1 }} />
@@ -68,7 +82,7 @@ export default function AppTabs() {
         >
           {TABS.map((tab) => (
             <TabTrigger key={tab.name} name={tab.name} href={tab.href} asChild>
-              <TabButton tab={tab} />
+              <TabButton tab={tab} badge={tab.name === 'index' ? (unread ?? 0) : undefined} />
             </TabTrigger>
           ))}
         </View>

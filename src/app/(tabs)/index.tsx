@@ -13,7 +13,7 @@ import {
 } from '@/components/shared';
 import { ProjectCreateDialog } from '@/components/project-create-dialog';
 import { listInvitations } from '@/lib/api/invitations';
-import { listNotifications } from '@/lib/api/notifications';
+import { unreadNotificationCount } from '@/lib/api/notifications';
 import { listProjects } from '@/lib/api/projects';
 import { listTeams } from '@/lib/api/teams';
 import { listTasks } from '@/lib/api/tasks';
@@ -54,9 +54,9 @@ export default function HomeScreen() {
     queryFn: () => listInvitations(token ?? '', 'pending'),
     enabled: !!token,
   });
-  const notifications = useQuery({
-    queryKey: queryKeys.notifications,
-    queryFn: () => listNotifications(token ?? ''),
+  const unreadQuery = useQuery({
+    queryKey: queryKeys.notificationUnread,
+    queryFn: () => unreadNotificationCount(token ?? ''),
     enabled: !!token,
   });
   const teams = useQuery({
@@ -68,7 +68,7 @@ export default function HomeScreen() {
   const loading = projects.isLoading || openTasks.isLoading;
   const error = projects.isError ? projects.error : openTasks.isError ? openTasks.error : null;
 
-  const unreadCount = notifications.data?.items.filter((n) => !n.readAt).length ?? 0;
+  const unreadCount = unreadQuery.data ?? 0;
   const firstName = user?.name.split(/\s+/)[0] ?? 'there';
 
   return (
@@ -80,7 +80,7 @@ export default function HomeScreen() {
             void projects.refetch();
             void openTasks.refetch();
             void invitations.refetch();
-            void notifications.refetch();
+            void unreadQuery.refetch();
           }}
           tintColor={tokens.primary}
         />
@@ -101,7 +101,7 @@ export default function HomeScreen() {
           </View>
           <View className="flex-row gap-3">
             <StatCard icon={<Send2 size={20} variant="Outline" color={tokens.success} />} label="Pending invites" value={invitations.data?.items.length ?? 0} loading={invitations.isLoading} />
-            <StatCard icon={<NotificationBing size={20} variant="Outline" color={tokens.info} />} label="Unread" value={unreadCount} loading={notifications.isLoading} />
+            <StatCard icon={<NotificationBing size={20} variant="Outline" color={tokens.info} />} label="Unread" value={unreadCount} loading={unreadQuery.isLoading} />
           </View>
 
           <ProjectCreateDialog teams={teams.data?.items ?? []} />

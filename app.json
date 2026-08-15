@@ -41,6 +41,12 @@
             "photosPermission": "TeamShare uses your photos to attach images to tasks and comments.",
             "cameraPermission": "TeamShare uses your camera to attach photos to tasks."
           }
+        ],
+        [
+          "expo-notifications",
+          {
+            "color": "#4F46E5"
+          }
         ]
       ],
     "experiments": {

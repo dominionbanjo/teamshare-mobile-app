@@ -12,7 +12,7 @@ import {
   TSSkeletonList,
   TSButton,
 } from '@/components/shared';
-import { listNotifications, markAllNotificationsRead, markNotificationRead } from '@/lib/api/notifications';
+import { listNotifications, markAllNotificationsRead, markNotificationRead, unreadNotificationCount } from '@/lib/api/notifications';
 import type { Notification as NotificationType } from '@/lib/api/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
@@ -24,20 +24,55 @@ export default function NotificationsScreen() {
   const { token } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [page, setPage] = React.useState(1);
+  const [allItems, setAllItems] = React.useState<NotificationType[]>([]);
 
   const notifications = useQuery({
-    queryKey: queryKeys.notifications,
-    queryFn: () => listNotifications(token ?? ''),
+    // Flat key so socket invalidation of ['notifications'] prefix-matches it.
+    queryKey: ['notifications', 'page', page],
+    queryFn: () => listNotifications(token ?? '', page),
+    enabled: !!token,
+    placeholderData: (previous) => previous,
+  });
+
+  // Exact unread count across ALL pages (IMP-250) - badge + header source.
+  const unreadQuery = useQuery({
+    queryKey: queryKeys.notificationUnread,
+    queryFn: () => unreadNotificationCount(token ?? ''),
     enabled: !!token,
   });
 
+  // Append pages as the user scrolls (pagination UI).
+  React.useEffect(() => {
+    const items = notifications.data?.items ?? [];
+    if (items.length > 0 && page === 1) {
+      setAllItems(items);
+    } else if (items.length > 0 && page > 1) {
+      setAllItems((prev) => {
+        const known = new Set(prev.map((n) => n.id));
+        return [...prev, ...items.filter((n) => !known.has(n.id))];
+      });
+    }
+  }, [notifications.data, page]);
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.notificationUnread });
+  };
+
   const markRead = useMutation({
     mutationFn: (notification: NotificationType) => markNotificationRead(token ?? '', notification.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications }),
+    onSuccess: () => {
+      invalidate();
+      setAllItems((prev) => prev.map((n) => (n.readAt ? n : { ...n, readAt: new Date().toISOString() })));
+    },
   });
   const markAll = useMutation({
     mutationFn: () => markAllNotificationsRead(token ?? ''),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications }),
+    onSuccess: () => {
+      invalidate();
+      setAllItems((prev) => prev.map((n) => ({ ...n, readAt: new Date().toISOString() })));
+    },
   });
 
   const openNotification = (notification: NotificationType) => {
@@ -51,7 +86,11 @@ export default function NotificationsScreen() {
     }
   };
 
-  const unread = notifications.data?.items.filter((n) => !n.readAt).length ?? 0;
+  const unread = unreadQuery.data ?? allItems.filter((n) => !n.readAt).length;
+  const total = notifications.data?.pagination?.total ?? allItems.length;
+  const hasMore = notifications.data?.pagination
+    ? notifications.data.pagination.totalPages > page
+    : false;
 
   return (
     <TSScreen
@@ -73,15 +112,15 @@ export default function NotificationsScreen() {
         }
       />
 
-      {notifications.isLoading ? (
+      {notifications.isLoading && allItems.length === 0 ? (
         <TSSkeletonList rows={6} />
       ) : notifications.isError ? (
         <TSErrorState message={notifications.error.message} onRetry={() => void notifications.refetch()} />
-      ) : notifications.data && notifications.data.items.length > 0 ? (
+      ) : allItems.length > 0 ? (
         <View className="overflow-hidden rounded-lg border border-border bg-background">
-          {notifications.data.items.map((notification, index) => {
+          {allItems.map((notification, index) => {
             const isRead = !!notification.readAt;
-            const isLast = index === notifications.data!.items.length - 1;
+            const isLast = index === allItems.length - 1;
             const rowPending = markRead.isPending && markRead.variables?.id === notification.id;
             return (
               <Pressable
@@ -121,6 +160,16 @@ export default function NotificationsScreen() {
           title="No notifications"
           description="Mentions and task updates will show up here."
         />
+      )}
+      {hasMore && (
+        <TSButton
+          variant="outline"
+          loading={notifications.isFetching}
+          onPress={() => setPage((p) => p + 1)}
+          className="self-center"
+        >
+          Load more ({allItems.length}/{total})
+        </TSButton>
       )}
     </TSScreen>
   );

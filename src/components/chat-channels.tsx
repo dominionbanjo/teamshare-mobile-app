@@ -8,6 +8,7 @@ import {
   TSConfirmDialog,
   TSDialog,
   TSInput,
+  TSSearchInput,
 } from '@/components/shared';
 import {
   createChatChannel,
@@ -36,6 +37,7 @@ export function ChatChannels({ projectId, activeChannelId, canManage, onSelect }
   const [editing, setEditing] = React.useState<ChannelListEntry | null>(null);
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const [query, setQuery] = React.useState('');
 
   const channelsQuery = useQuery({
     queryKey: queryKeys.chatChannels(projectId),
@@ -43,6 +45,16 @@ export function ChatChannels({ projectId, activeChannelId, canManage, onSelect }
     enabled: !!token,
   });
   const channels = channelsQuery.data ?? [];
+
+  const q = query.trim().toLowerCase();
+  const filtered = React.useMemo(() => {
+    if (!q) return channels;
+    return channels.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.description ?? '').toLowerCase().includes(q)
+    );
+  }, [channels, q]);
 
   const refresh = React.useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.chatChannels(projectId) });
@@ -104,38 +116,52 @@ export function ChatChannels({ projectId, activeChannelId, canManage, onSelect }
 
   return (
     <View className="border-b border-border bg-muted/40 py-2">
+      <View className="px-3 pb-2">
+        <TSSearchInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search conversations"
+          accessibilityLabel="Search conversations"
+        />
+      </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="gap-1.5 px-3"
       >
-        {channels.map((channel) => (
-          <Pressable
-            key={channel.id}
-            onPress={() => onSelect(channel.id)}
-            className={cn(
-              'flex-row items-center gap-1.5 rounded-full border px-3 py-1.5',
-              channel.id === activeChannelId
-                ? 'border-transparent bg-primary'
-                : 'border-border bg-background'
-            )}
-          >
-            <View
+        {filtered.length === 0 ? (
+          <Text className="py-1.5 text-xs text-muted-foreground">
+            {channels.length === 0 ? 'No conversations yet.' : 'No conversations found.'}
+          </Text>
+        ) : (
+          filtered.map((channel) => (
+            <Pressable
+              key={channel.id}
+              onPress={() => onSelect(channel.id)}
               className={cn(
-                'h-1.5 w-1.5 rounded-full',
-                channel.id === activeChannelId ? 'bg-white/70' : 'bg-primary'
-              )}
-            />
-            <Text
-              className={cn(
-                'text-xs font-medium',
-                channel.id === activeChannelId ? 'text-white' : 'text-foreground'
+                'flex-row items-center gap-1.5 rounded-full border px-3 py-1.5',
+                channel.id === activeChannelId
+                  ? 'border-transparent bg-primary'
+                  : 'border-border bg-background'
               )}
             >
-              {channel.name}
-            </Text>
-          </Pressable>
-        ))}
+              <View
+                className={cn(
+                  'h-1.5 w-1.5 rounded-full',
+                  channel.id === activeChannelId ? 'bg-white/70' : 'bg-primary'
+                )}
+              />
+              <Text
+                className={cn(
+                  'text-xs font-medium',
+                  channel.id === activeChannelId ? 'text-white' : 'text-foreground'
+                )}
+              >
+                {channel.name}
+              </Text>
+            </Pressable>
+          ))
+        )}
         {canManage && (
           <Pressable
             onPress={openCreate}

@@ -246,6 +246,19 @@ export interface Notification {
   createdAt: string;
 }
 
+/** Per-user notification preferences (backend notification-settings). */
+export interface NotificationSettings {
+  mentions: boolean;
+  assignments: boolean;
+  comments: boolean;
+  resolutions: boolean;
+  taskUpdates: boolean;
+  dueDates: boolean;
+  invites: boolean;
+  digest: boolean;
+  mutedProjectIds: string[];
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;

@@ -31,7 +31,7 @@ import { formatDate } from '@/lib/format';
 import { tokens } from '@/constants/theme';
 
 export default function ProjectDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, channel } = useLocalSearchParams<{ id: string; channel?: string }>();
   const { token, user } = useAuth();
   const router = useRouter();
 
@@ -55,7 +55,11 @@ export default function ProjectDetailScreen() {
     queryFn: () => listChatChannels(token ?? '', id),
     enabled: !!token && !!id,
   });
-  const [chatChannelId, setChatChannelId] = React.useState('');
+  // IMP-250: chat notifications deep-link /projects/:id?channel=:cid - land
+  // on that conversation instead of the first channel.
+  const [chatChannelId, setChatChannelId] = React.useState<string>(() =>
+    typeof channel === 'string' ? channel : ''
+  );
 
   const loading = project.isLoading || tasks.isLoading || members.isLoading;
   const error = project.error ?? tasks.error ?? members.error;

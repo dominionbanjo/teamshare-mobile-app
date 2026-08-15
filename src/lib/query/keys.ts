@@ -20,6 +20,8 @@ export const queryKeys = {
   teams: ['teams'] as const,
   invitations: ['invitations'] as const,
   notifications: ['notifications'] as const,
+  notificationUnread: ['notifications', 'unread-count'] as const,
+  notificationSettings: ['notifications', 'settings'] as const,
   companies: ['companies'] as const,
   company: (id: string) => ['companies', id] as const,
   companyMembers: (id: string) => ['companies', id, 'members'] as const,
