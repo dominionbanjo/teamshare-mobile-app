@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { Comment } from './types';
+import type { Attachment, Comment } from './types';
 
 export interface CreateCommentPayload {
   /** Exactly one of taskId or documentId (backend validates). */
@@ -20,4 +20,9 @@ export async function listTaskComments(token: string, taskId: string): Promise<C
 
 export async function createComment(token: string, payload: CreateCommentPayload): Promise<Comment> {
   return apiFetch<Comment>('/comments', { method: 'POST', body: payload, token });
+}
+
+/** GET /attachments?taskId= - task attachments (IMP-240, hydrates detail). */
+export async function listTaskAttachments(token: string, taskId: string): Promise<Attachment[]> {
+  return apiFetch<Attachment[]>(`/attachments`, { token, query: { taskId } });
 }

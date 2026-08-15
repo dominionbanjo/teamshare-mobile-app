@@ -155,6 +155,42 @@ export interface Task {
   watching?: boolean;
   watcherCount?: number;
   attachments?: Attachment[];
+  /** Subtask + checklist progress (IMP-240). */
+  subtaskCount?: number;
+  checklistTotal?: number;
+  checklistDone?: number;
+}
+
+/** Nestable sub-work item under a task (IMP-240). */
+export interface Subtask {
+  id: string;
+  taskId: string;
+  parentId?: string | null;
+  title: string;
+  done: boolean;
+  assigneeId?: string | null;
+  dueDate?: string | null;
+  sortOrder: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  assignee?: User | null;
+  creator?: User | null;
+  children?: Subtask[];
+  checklistItems?: ChecklistItem[];
+}
+
+/** Checklist row on a task OR a subtask (exactly one target, IMP-240). */
+export interface ChecklistItem {
+  id: string;
+  taskId?: string | null;
+  subtaskId?: string | null;
+  title: string;
+  done: boolean;
+  sortOrder: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Comment {
@@ -268,9 +304,22 @@ export interface DocumentItem {
   uploader?: User | null;
 }
 
+export interface ChatChannel {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  messageCount?: number;
+  lastMessageAt?: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   projectId: string;
+  channelId: string;
   authorId: string;
   body: string;
   attachmentUrl?: string | null;

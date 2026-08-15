@@ -12,5 +12,6 @@ export * from './ts-select';
 export * from './ts-skeleton';
 export * from './ts-form';
 export * from './ts-switch';
+export * from './ts-checkbox';
 export * from './ts-screen';
 export * from './ts-error-state';

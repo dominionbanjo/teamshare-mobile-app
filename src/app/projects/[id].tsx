@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { ChatPanel } from '@/components/chat-panel';
+import { ChatChannels } from '@/components/chat-channels';
 import { DocumentsTab } from '@/components/documents-tab';
 import { EnvVarsTab } from '@/components/env-vars-tab';
 import { InviteMemberDialog } from '@/components/invite-member-dialog';
@@ -23,6 +24,7 @@ import {
   TSTabs,
 } from '@/components/shared';
 import { listProjectMembers, listProjectTasks, getProject } from '@/lib/api/projects';
+import { listChatChannels } from '@/lib/api/chat';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
 import { formatDate } from '@/lib/format';
@@ -48,6 +50,12 @@ export default function ProjectDetailScreen() {
     queryFn: () => listProjectMembers(token ?? '', id),
     enabled: !!token && !!id,
   });
+  const channels = useQuery({
+    queryKey: queryKeys.chatChannels(id),
+    queryFn: () => listChatChannels(token ?? '', id),
+    enabled: !!token && !!id,
+  });
+  const [chatChannelId, setChatChannelId] = React.useState('');
 
   const loading = project.isLoading || tasks.isLoading || members.isLoading;
   const error = project.error ?? tasks.error ?? members.error;
@@ -70,6 +78,23 @@ export default function ProjectDetailScreen() {
 
   const projectRow = project.data;
   const currentRole = members.data?.items.find((m) => m.userId === user?.id)?.role;
+
+  // Chat conversations: active falls back to the first channel (General).
+  const channelRows = channels.data ?? [];
+  const activeChannel = channelRows.find((c) => c.id === chatChannelId) ?? channelRows[0];
+  const activeChannelId = activeChannel?.id ?? '';
+
+  const chatContent = (
+    <View className="overflow-hidden rounded-lg border border-border bg-background">
+      <ChatChannels
+        projectId={id}
+        activeChannelId={activeChannelId}
+        canManage={currentRole !== 'viewer'}
+        onSelect={setChatChannelId}
+      />
+      <ChatPanel projectId={id} channelId={activeChannelId} channelName={activeChannel?.name} />
+    </View>
+  );
 
   const membersContent = (
     <View className="gap-3">
@@ -218,7 +243,7 @@ export default function ProjectDetailScreen() {
           { value: 'members', label: 'Members', count: members.data?.items.length ?? 0, content: membersContent },
           { value: 'env', label: 'Env Vars', content: <EnvVarsTab projectId={id} canAudit={currentRole === 'owner'} /> },
           { value: 'documents', label: 'Documents', content: <DocumentsTab projectId={id} /> },
-          { value: 'chat', label: 'Chat', content: <ChatPanel projectId={id} /> },
+          { value: 'chat', label: 'Chat', content: chatContent },
           { value: 'info', label: 'Info', content: infoContent },
         ]}
       />

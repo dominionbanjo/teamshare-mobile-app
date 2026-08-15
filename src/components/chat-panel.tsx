@@ -44,7 +44,15 @@ const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'http://localhost:4000';
 const GROUP_GAP_MS = 5 * 60 * 1000;
 const TYPING_THROTTLE_MS = 2_000;
 
-type MessageAck = { ok: boolean; error?: string; message?: ChatMessage; clientId?: string };
+type MessageAck = {
+  ok?: boolean;
+  message?: ChatMessage;
+  clientId?: string;
+  /** Backend envelope: { success, clientId, data } (server) - ok/message are legacy client shapes. */
+  success?: boolean;
+  data?: ChatMessage;
+  error?: string;
+};
 
 type PendingAttachment = { uri: string; name: string; mime: string; url: string };
 
@@ -52,6 +60,7 @@ type PendingAttachment = { uri: string; name: string; mime: string; url: string 
 type TempMessage = {
   clientId: string;
   projectId: string;
+  channelId: string;
   authorId: string;
   body: string;
   attachmentUrl?: string | null;
@@ -97,7 +106,15 @@ function mergeMessages(...lists: ((ChatMessage | TempMessage)[] | undefined)[]):
 }
 
 /** Project chat - socket.io live messages merged with REST history. */
-export function ChatPanel({ projectId }: { projectId: string }) {
+export function ChatPanel({
+  projectId,
+  channelId,
+  channelName,
+}: {
+  projectId: string;
+  channelId: string;
+  channelName?: string;
+}) {
   const { token, user } = useAuth();
   const queryClient = useQueryClient();
   const [live, setLive] = React.useState<ChatMessage[]>([]);
@@ -125,9 +142,9 @@ export function ChatPanel({ projectId }: { projectId: string }) {
   });
 
   const history = useQuery({
-    queryKey: queryKeys.chatMessages(projectId),
-    queryFn: () => listChatMessages(token ?? '', projectId),
-    enabled: !!token && !!projectId,
+    queryKey: queryKeys.chatMessages(projectId, channelId),
+    queryFn: () => listChatMessages(token ?? '', projectId, channelId),
+    enabled: !!token && !!projectId && !!channelId,
   });
 
   React.useEffect(() => {
@@ -136,22 +153,24 @@ export function ChatPanel({ projectId }: { projectId: string }) {
     socketRef.current = socket;
     socket.on('connect', () => {
       setConnected(true);
-      socket.emit('join', { projectId }, (res?: { ok?: boolean; data?: { onlineIds?: string[] } }) => {
+      socket.emit('join', { projectId, channelId }, (res?: { ok?: boolean; data?: { onlineIds?: string[] } }) => {
         if (res?.data?.onlineIds) setOnlineCount(res.data.onlineIds.length);
       });
     });
     socket.on('disconnect', () => setConnected(false));
     socket.on('message:new', (message: ChatMessage) => {
+      if (!message || message.channelId !== channelId) return;
       setLive((prev) => mergeMessages(prev, [message]) as ChatMessage[]);
       setTemps((prev) => prev.filter((t) => t.pending || t.authorId !== message.authorId || t.body !== message.body));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId, channelId) });
     });
-    socket.on('presence:update', (payload?: { projectId?: string; onlineIds?: string[] }) => {
-      if (payload?.projectId !== projectId) return;
-      setOnlineCount(payload.onlineIds?.length ?? 0);
+    socket.on('presence:update', (payload?: { projectId?: string; channelId?: string; onlineIds?: string[] }) => {
+      if (payload?.channelId && payload.channelId !== channelId) return;
+      setOnlineCount(payload?.onlineIds?.length ?? 0);
     });
-    socket.on('typing:update', (payload?: { projectId?: string; userId?: string; name?: string; isTyping?: boolean }) => {
-      if (payload?.projectId !== projectId || !payload.userId || payload.userId === user?.id) return;
+    socket.on('typing:update', (payload?: { projectId?: string; channelId?: string; userId?: string; name?: string; isTyping?: boolean }) => {
+      if (payload?.channelId && payload.channelId !== channelId) return;
+      if (!payload?.userId || payload.userId === user?.id) return;
       setTypingUsers((prev) => {
         const without = prev.filter((t) => t.userId !== payload.userId);
         return payload.isTyping ? [...without, { userId: payload.userId!, name: payload.name ?? 'Someone' }] : without;
@@ -162,18 +181,22 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       setLive((prev) =>
         prev.map((m) => (m.id === payload.id ? { ...m, body: payload.body ?? m.body, editedAt: payload.editedAt ?? m.editedAt } : m))
       );
-      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId, channelId) });
     });
     socket.on('message:deleted', (payload?: { id?: string }) => {
       if (!payload?.id) return;
       setLive((prev) => prev.filter((m) => m.id !== payload.id));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId, channelId) });
     });
+    // Fresh conversation: drop any state from the previous channel.
+    setLive([]);
+    setTemps([]);
+    setTypingUsers([]);
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [token, projectId, queryClient, user?.id]);
+  }, [token, projectId, channelId, queryClient, user?.id]);
 
   /* ------------------------------------------------------- composer */
 
@@ -183,7 +206,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
     const now = Date.now();
     if (isTyping && now - typingSentAtRef.current < TYPING_THROTTLE_MS) return;
     typingSentAtRef.current = now;
-    socket.emit('typing', { projectId, isTyping });
+    socket.emit('typing', { projectId, channelId, isTyping });
   };
 
   const pickAndAttach = async () => {
@@ -226,6 +249,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       {
         clientId,
         projectId,
+        channelId,
         authorId,
         body,
         attachmentUrl: attachment?.url,
@@ -245,6 +269,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       'message',
       {
         projectId,
+        channelId,
         body,
         clientId,
         attachmentUrl: attachment?.url,
@@ -253,7 +278,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       },
       (ack?: MessageAck) => {
         setPending(false);
-        if (!ack || ack.ok === false) {
+        if (!ack || ack.ok === false || ack.success === false) {
           console.error('chat ack error', ack?.error);
           setTemps((prev) =>
             prev.map((t) => (t.clientId === clientId ? { ...t, pending: false, failed: true } : t))
@@ -262,8 +287,9 @@ export function ChatPanel({ projectId }: { projectId: string }) {
           return;
         }
         setTemps((prev) => prev.filter((t) => t.clientId !== clientId));
-        if (ack.message) setLive((prev) => mergeMessages(prev, [ack.message!]) as ChatMessage[]);
-        void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId) });
+        const persisted = ack.data ?? ack.message;
+        if (persisted) setLive((prev) => mergeMessages(prev, [persisted]) as ChatMessage[]);
+        void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId, channelId) });
       }
     );
   };
@@ -279,6 +305,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       'message',
       {
         projectId,
+        channelId,
         body: temp.body,
         clientId: temp.clientId,
         attachmentUrl: temp.attachmentUrl,
@@ -286,13 +313,14 @@ export function ChatPanel({ projectId }: { projectId: string }) {
         attachmentMime: temp.attachmentMime,
       },
       (ack?: MessageAck) => {
-        if (!ack || ack.ok === false) {
+        if (!ack || ack.ok === false || ack.success === false) {
           setTemps((prev) => prev.map((t) => (t.clientId === temp.clientId ? { ...t, pending: false, failed: true } : t)));
           return;
         }
         setTemps((prev) => prev.filter((t) => t.clientId !== temp.clientId));
-        if (ack.message) setLive((prev) => mergeMessages(prev, [ack.message!]) as ChatMessage[]);
-        void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId) });
+        const persisted = ack.data ?? ack.message;
+        if (persisted) setLive((prev) => mergeMessages(prev, [persisted]) as ChatMessage[]);
+        void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId, channelId) });
       }
     );
   };
@@ -310,7 +338,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       );
       setEditing(null);
       setActionsFor(null);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId, channelId) });
     } catch (err) {
       setSendError(err instanceof Error ? err.message : 'Could not update message.');
     }
@@ -321,7 +349,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       await deleteChatMessage(token ?? '', id);
       setLive((prev) => prev.filter((m) => m.id !== id));
       setActionsFor(null);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(projectId, channelId) });
     } catch (err) {
       setSendError(err instanceof Error ? err.message : 'Could not delete message.');
     }
@@ -425,7 +453,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
             <MessageText size={16} variant="Bold" color={tokens.primary} />
           </View>
           <View>
-            <Text className="text-sm font-semibold text-foreground">Project chat</Text>
+            <Text className="text-sm font-semibold text-foreground">{channelName ?? 'Project chat'}</Text>
             <Text className="text-[11px] text-muted-foreground">
               {connected ? `${onlineCount} online` : 'reconnecting…'}
             </Text>
@@ -621,7 +649,7 @@ function MessageBubble({
     <View className={cn('max-w-[84%]', isOwn ? 'self-end' : 'self-start', grouped ? '' : 'mt-1')}>
       {!grouped && !isOwn && (
         <View className="mb-1 flex-row items-center gap-1.5">
-          <TSAvatar name={authorName} src={!temp ? message.author?.avatarUrl : undefined} size={20} />
+          <TSAvatar name={authorName} src={!temp ? message.author?.avatarUrl : undefined} size={24} />
           <Text className="text-xs font-semibold text-foreground">{authorName}</Text>
           {!temp && message.author?.kind === 'agent' && <TSAgentBadge />}
         </View>

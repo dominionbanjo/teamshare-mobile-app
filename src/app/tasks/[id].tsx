@@ -24,11 +24,12 @@ import {
   TSSkeletonList,
 } from '@/components/shared';
 import { TSAgentBadge } from '@/components/agents/agent-avatar';
-import { createComment, listTaskComments } from '@/lib/api/comments';
+import { createComment, listTaskAttachments, listTaskComments } from '@/lib/api/comments';
 import { listProjectMembers } from '@/lib/api/projects';
-import { getTask, unwatchTask, watchTask } from '@/lib/api/tasks';
+import { getTask, listSubtasks, listTaskChecklistItems, unwatchTask, watchTask } from '@/lib/api/tasks';
 import { deleteAttachment, mimeFromName, uploadAttachmentCloudinary, type LocalFile } from '@/lib/api/uploads';
 import type { Attachment, Comment } from '@/lib/api/types';
+import { ChecklistPanel, SubtasksPanel } from '@/components/task-breakdown';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
 import { formatDateTime, formatRelative } from '@/lib/format';
@@ -42,7 +43,14 @@ export default function TaskDetailScreen() {
   const { token } = useAuth();
   const queryClient = useQueryClient();
 
-  const [attachments, setAttachments] = React.useState<Attachment[]>([]);
+  // Attachments come from GET /attachments?taskId (hydrated from the server;
+  // previously this state started empty and never loaded existing files).
+  const attachmentsQuery = useQuery({
+    queryKey: queryKeys.taskAttachments(id),
+    queryFn: () => listTaskAttachments(token ?? '', id),
+    enabled: !!token && !!id,
+  });
+  const attachments = attachmentsQuery.data ?? [];
   const [uploadingKind, setUploadingKind] = React.useState<UploadKind>(null);
   const [commentImage, setCommentImage] = React.useState<LocalFile | null>(null);
   const [replyToId, setReplyToId] = React.useState<string | null>(null);
@@ -56,6 +64,16 @@ export default function TaskDetailScreen() {
   const comments = useQuery({
     queryKey: queryKeys.taskComments(id),
     queryFn: () => listTaskComments(token ?? '', id),
+    enabled: !!token && !!id,
+  });
+  const subtasks = useQuery({
+    queryKey: queryKeys.subtasks(id),
+    queryFn: () => listSubtasks(token ?? '', id),
+    enabled: !!token && !!id,
+  });
+  const checklistItems = useQuery({
+    queryKey: queryKeys.checklistItems(id),
+    queryFn: () => listTaskChecklistItems(token ?? '', id),
     enabled: !!token && !!id,
   });
   const members = useQuery({
@@ -104,15 +122,15 @@ export default function TaskDetailScreen() {
 
   const removeAttachment = useMutation({
     mutationFn: (attachmentId: string) => deleteAttachment(token ?? '', attachmentId),
-    onSuccess: (_result, attachmentId) => {
-      setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.taskAttachments(id) });
     },
   });
 
   const uploadTaskAttachment = async (file: LocalFile) => {
     try {
-      const row = await uploadAttachmentCloudinary(token ?? '', { taskId: id }, file, 'task');
-      setAttachments((prev) => [row, ...prev]);
+      await uploadAttachmentCloudinary(token ?? '', { taskId: id }, file, 'task');
+      void queryClient.invalidateQueries({ queryKey: queryKeys.taskAttachments(id) });
     } catch (err) {
       Alert.alert('Upload failed', err instanceof Error ? err.message : 'Could not upload the file.');
     }
@@ -281,6 +299,14 @@ export default function TaskDetailScreen() {
             </TSButton>
           </View>
         </View>
+      </TSCard>
+
+      <TSCard title="Subtasks" description="Break the task down - subtasks can nest and each has its own checklist.">
+        <SubtasksPanel taskId={id} subtasks={subtasks.data} loading={subtasks.isLoading} />
+      </TSCard>
+
+      <TSCard title="Checklist" description="Check off the steps needed to finish this task.">
+        <ChecklistPanel taskId={id} items={checklistItems.data} />
       </TSCard>
 
       <TSCard title="Attachments" description="Files attached to this task (25MB max).">

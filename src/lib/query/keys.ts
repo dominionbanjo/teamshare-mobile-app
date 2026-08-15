@@ -6,10 +6,17 @@ export const queryKeys = {
   projectEnvVars: (projectId: string) => ['projects', projectId, 'env-vars'] as const,
   projectEnvVarAudit: (projectId: string) => ['projects', projectId, 'env-vars', 'audit'] as const,
   projectDocuments: (projectId: string) => ['projects', projectId, 'documents'] as const,
-  chatMessages: (projectId: string) => ['projects', projectId, 'chat'] as const,
+  chatChannels: (projectId: string) => ['projects', projectId, 'chat-channels'] as const,
+  chatMessages: (projectId: string, channelId: string) =>
+    ['projects', projectId, 'chat', channelId] as const,
   tasks: (params?: Record<string, unknown>) => ['tasks', params ?? {}] as const,
   task: (id: string) => ['tasks', id] as const,
   taskComments: (taskId: string) => ['tasks', taskId, 'comments'] as const,
+  taskAttachments: (taskId: string) => ['tasks', taskId, 'attachments'] as const,
+  /** Nested subtask tree of a task (IMP-240). */
+  subtasks: (taskId: string) => ['tasks', taskId, 'subtasks'] as const,
+  /** Checklist rows living directly on a task (IMP-240). */
+  checklistItems: (taskId: string) => ['tasks', taskId, 'checklist-items'] as const,
   teams: ['teams'] as const,
   invitations: ['invitations'] as const,
   notifications: ['notifications'] as const,

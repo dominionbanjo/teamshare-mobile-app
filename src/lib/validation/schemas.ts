@@ -186,9 +186,12 @@ export type CommentFormInput = z.infer<typeof CommentFormSchema>;
 /** Mobile-friendly task create form (dueDate as YYYY-MM-DD text). */
 export const CreateTaskFormSchema = z.object({
   title: z.string().min(2, 'Title is required').max(120),
+  description: z.string().max(10_000).optional(),
   priority: TaskPrioritySchema.default('medium'),
   assigneeId: uuidSchema.optional().or(z.literal('')).optional(),
   dueDate: DueDateSchema,
+  /** Comma-separated tags - parsed into a string[] before submit (IMP-240). */
+  tagsText: z.string().max(240).optional(),
 });
 export type CreateTaskFormInput = z.infer<typeof CreateTaskFormSchema>;
 

@@ -39,7 +39,7 @@ export function TSAvatar({ name, src, size = 40, online = false, className }: TS
         {src ? (
           <AvatarImage source={{ uri: src }} />
         ) : (
-          <AvatarFallback className="rounded-full bg-[var(--ts-primary-100)]">
+          <AvatarFallback className="rounded-full bg-[var(--ts-primary-100)] p-1">
             <Text className={cn('font-medium text-[var(--ts-primary-700)]', TEXT_CLASSES[size])}>{initials}</Text>
           </AvatarFallback>
         )}
