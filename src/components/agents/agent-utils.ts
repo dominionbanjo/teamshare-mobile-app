@@ -18,6 +18,7 @@ export const AGENT_CAPABILITY_META: Record<AgentCapabilityValue, CapabilityMeta>
   'chat:read': { label: 'Read chat', description: 'Read project chat channels' },
   'chat:write': { label: 'Post to chat', description: 'Send messages in project chat' },
   'documents:read': { label: 'Read documents', description: 'Read documents (truncated - never env vars)' },
+  'documents:write': { label: 'Write documents', description: 'Create and edit markdown notes + folder docs' },
   search: { label: 'Search', description: 'Global search across visible items' },
   'projects:read': { label: 'Read projects', description: 'Read project and member context' },
 };

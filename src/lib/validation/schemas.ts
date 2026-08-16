@@ -21,7 +21,7 @@ export type TaskPriority = z.infer<typeof TaskPrioritySchema>;
 export const EnvTierSchema = z.enum(['dev', 'staging', 'prod']);
 export type EnvTier = z.infer<typeof EnvTierSchema>;
 
-export const DocumentTypeSchema = z.enum(['link', 'file']);
+export const DocumentTypeSchema = z.enum(['link', 'file', 'note']);
 export type DocumentType = z.infer<typeof DocumentTypeSchema>;
 
 export const ProjectStatusSchema = z.enum(['active', 'archived']);
@@ -114,7 +114,14 @@ export const CreateTaskSchema = z.object({
 });
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 
-export const UpdateTaskSchema = CreateTaskSchema.omit({ projectId: true }).partial();
+export const UpdateTaskSchema = CreateTaskSchema.omit({ projectId: true })
+  // Mirror the backend DTO (tasks.dto.ts): nullable fields so updates can
+  // CLEAR a value (null) vs leave it untouched (undefined).
+  .extend({
+    assigneeId: uuidSchema.optional().nullable(),
+    dueDate: z.string().datetime().optional().nullable(),
+  })
+  .partial();
 
 // Allowed status transitions (PRD s6.4 state machine) live in
 // src/constants/enums.ts (import from there; re-exporting here would
@@ -195,6 +202,12 @@ export const CreateTaskFormSchema = z.object({
 });
 export type CreateTaskFormInput = z.infer<typeof CreateTaskFormSchema>;
 
+/** Create + edit task form - status included so the edit dialog can move it. */
+export const TaskFormSchema = CreateTaskFormSchema.extend({
+  status: TaskStatusSchema.default('open'),
+});
+export type TaskFormInput = z.infer<typeof TaskFormSchema>;
+
 /** Project-scoped invite (roles from PRD section 5 project matrix). */
 export const ProjectInviteSchema = z.object({
   email: emailSchema,
@@ -222,6 +235,7 @@ export const AgentCapabilitySchema = z.enum([
   'chat:read',
   'chat:write',
   'documents:read',
+  'documents:write',
   'search',
   'projects:read',
 ]);

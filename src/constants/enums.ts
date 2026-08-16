@@ -169,7 +169,7 @@ export const AGENT_CAPABILITY_GROUPS: Record<
   },
   work: {
     label: 'Work',
-    capabilities: ['tasks:create', 'tasks:update', 'tasks:assign'],
+    capabilities: ['tasks:create', 'tasks:update', 'tasks:assign', 'documents:write'],
   },
   communicate: {
     label: 'Communicate',
