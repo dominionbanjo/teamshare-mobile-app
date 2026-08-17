@@ -7,6 +7,7 @@ import {
   Edit2,
   MessageText,
   More,
+  Radar,
   Refresh2,
   Send2,
   Trash,
@@ -129,6 +130,7 @@ export function ChatPanel({
   const [attachment, setAttachment] = React.useState<PendingAttachment | null>(null);
   const [actionsFor, setActionsFor] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState<{ id: string; body: string } | null>(null);
+  const [answerDraft, setAnswerDraft] = React.useState('');
   const socketRef = React.useRef<Socket | null>(null);
   const typingSentAtRef = React.useRef(0);
 
@@ -376,6 +378,21 @@ export function ChatPanel({
 
   const messages = mergeMessages(history.data?.items ?? [], live, temps);
 
+  // Phase B ask-human: detect a pending [question] in the channel.
+  const pendingQuestion = React.useMemo(() => {
+    if (!messages.length) return null;
+    let pending: ChatMessage | null = null;
+    for (const msg of messages) {
+      if (isTemp(msg)) continue;
+      if (msg.author?.kind === 'agent' && msg.body.startsWith('[question]')) {
+        pending = msg;
+      } else if (msg.author?.kind === 'human' && pending) {
+        pending = null;
+      }
+    }
+    return pending;
+  }, [messages]);
+
   /** Mention names derived from loaded messages - no extra state to sync. */
   const memberNames = React.useMemo(() => {
     const names = new Set<string>();
@@ -552,6 +569,53 @@ export function ChatPanel({
         <Text className="px-3 pb-1 text-[11px] italic text-muted-foreground">
           {typers.map((t) => t.name).join(', ')} {typers.length === 1 ? 'is' : 'are'} typing…
         </Text>
+      )}
+
+      {/* Phase B ask-human: pending question answer box */}
+      {pendingQuestion && (
+        <View style={{ borderTopWidth: 1, borderTopColor: `${tokens.warning}40`, backgroundColor: `${tokens.warning}10` }} className="px-4 py-3">
+          <View className="flex-row items-start gap-2.5">
+            <Radar size={18} variant="TwoTone" color={tokens.warning} className="mt-0.5 shrink-0" />
+            <View className="min-w-0 flex-1">
+              <Text className="text-sm font-semibold text-foreground">
+                Agent is waiting for your answer
+              </Text>
+              <Text className="mt-1 text-xs leading-5 text-secondary-foreground" numberOfLines={4}>
+                {pendingQuestion.body.replace(/^\[question\]\s*/, '')}
+              </Text>
+              <View className="mt-3 flex-row gap-2">
+                <TSInput
+                  value={answerDraft}
+                  onChangeText={setAnswerDraft}
+                  placeholder="Type your answer…"
+                  className="h-9 flex-1"
+                  onSubmitEditing={() => {
+                    if (answerDraft.trim()) {
+                      setInput(answerDraft.trim());
+                      setTimeout(() => send(), 0);
+                      setAnswerDraft('');
+                    }
+                  }}
+                  returnKeyType="send"
+                />
+                <TSButton
+                  tsSize="sm"
+                  disabled={!answerDraft.trim()}
+                  onPress={() => {
+                    if (answerDraft.trim()) {
+                      setInput(answerDraft.trim());
+                      setTimeout(() => send(), 0);
+                      setAnswerDraft('');
+                    }
+                  }}
+                  icon={<Send2 size={14} variant="Outline" color="currentColor" />}
+                >
+                  Answer
+                </TSButton>
+              </View>
+            </View>
+          </View>
+        </View>
       )}
 
       <View className="gap-1 border-t border-border p-2">
