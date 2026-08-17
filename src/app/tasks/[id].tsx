@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
-import { Camera, CloseCircle, DocumentUpload, Gallery, Message, MessageAdd1, Notification } from 'iconsax-react-native';
+import { Camera, CloseCircle, DocumentUpload, Edit2, Gallery, Message, MessageAdd1, Notification, Radar } from 'iconsax-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Alert, Pressable, RefreshControl, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import {
   PriorityBadge,
@@ -22,14 +22,16 @@ import {
   TSInput,
   TSScreen,
   TSSkeletonList,
+  TSSelect,
 } from '@/components/shared';
 import { TSAgentBadge } from '@/components/agents/agent-avatar';
 import { createComment, listTaskAttachments, listTaskComments } from '@/lib/api/comments';
 import { listProjectMembers } from '@/lib/api/projects';
-import { getTask, listSubtasks, listTaskChecklistItems, unwatchTask, watchTask } from '@/lib/api/tasks';
+import { getTask, listSubtasks, listTaskChecklistItems, unwatchTask, updateTask, watchTask } from '@/lib/api/tasks';
 import { deleteAttachment, mimeFromName, uploadAttachmentCloudinary, type LocalFile } from '@/lib/api/uploads';
-import type { Attachment, Comment } from '@/lib/api/types';
+import type { Attachment, Comment, Task } from '@/lib/api/types';
 import { ChecklistPanel, SubtasksPanel } from '@/components/task-breakdown';
+import { TaskEditDialog } from '@/components/task-create-dialog';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
 import { formatDateTime, formatRelative } from '@/lib/format';
@@ -37,6 +39,21 @@ import { CommentFormSchema, type CommentFormInput } from '@/lib/validation/schem
 import { tokens } from '@/constants/theme';
 
 type UploadKind = 'file' | 'gallery' | 'camera' | null;
+
+const STATUS_OPTIONS = [
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'in_review', label: 'In Review' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'urgent', label: 'Urgent' },
+];
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -93,6 +110,42 @@ export default function TaskDetailScreen() {
     },
     onError: (err) => {
       Alert.alert('Could not update watch status', err.message);
+    },
+  });
+
+  // Quick-edit parity with the web details rail: status/priority patch in
+  // place (backend enforces the state machine - INVALID_TRANSITION otherwise).
+  const quickUpdate = useMutation({
+    mutationFn: (payload: { status?: Task['status']; priority?: Task['priority'] }) =>
+      updateTask(token ?? '', id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.task(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
+    },
+    onError: (err) => Alert.alert('Could not update task', err.message),
+  });
+
+  // Phase B ask-human: the open question is the last agent comment starting
+  // with `[question]` that no later human comment has answered.
+  const commentList = comments.data ?? [];
+  const pendingQuestion = React.useMemo(() => {
+    let pending: Comment | null = null;
+    for (const comment of commentList) {
+      if (comment.author?.kind === 'agent' && comment.body.startsWith('[question]')) {
+        pending = comment;
+      } else if (comment.author?.kind === 'human' && pending) {
+        pending = null;
+      }
+    }
+    return pending;
+  }, [commentList]);
+  const [askReply, setAskReply] = React.useState('');
+
+  const answerQuestion = useMutation({
+    mutationFn: (body: string) => createComment(token ?? '', { taskId: id, body }),
+    onSuccess: () => {
+      setAskReply('');
+      queryClient.invalidateQueries({ queryKey: queryKeys.taskComments(id) });
     },
   });
 
@@ -227,7 +280,6 @@ export default function TaskDetailScreen() {
 
   const taskRow = task.data;
   const memberNames = members.data?.items.map((m) => m.user?.name ?? '') ?? [];
-  const commentList = comments.data ?? [];
   const repliesByParent = new Map<string, Comment[]>();
   for (const comment of commentList) {
     if (comment.parentId) {
@@ -261,43 +313,81 @@ export default function TaskDetailScreen() {
             <TaskStatusBadge status={taskRow.status} />
             <PriorityBadge priority={taskRow.priority} />
           </View>
-          <View className="mt-1 gap-1.5">
-            <View className="flex-row items-center gap-2">
-              <TSAvatar name={taskRow.assignee?.name ?? 'Unassigned'} src={taskRow.assignee?.avatarUrl} size={24} />
+            <View className="mt-1 gap-1.5">
+              <View className="flex-row items-center gap-2">
+                <TSAvatar name={taskRow.assignee?.name ?? 'Unassigned'} src={taskRow.assignee?.avatarUrl} size={24} />
+                <Text className="text-sm text-muted-foreground">
+                  Assignee: {taskRow.assignee?.name ?? 'Unassigned'}
+                </Text>
+                {taskRow.assignee?.kind === 'agent' && <TSAgentBadge />}
+              </View>
               <Text className="text-sm text-muted-foreground">
-                Assignee: {taskRow.assignee?.name ?? 'Unassigned'}
+                Due: {taskRow.dueDate ? formatDateTime(taskRow.dueDate) : 'No due date'}
               </Text>
-              {taskRow.assignee?.kind === 'agent' && <TSAgentBadge />}
+              <Text className="text-sm text-muted-foreground">
+                {taskRow.project?.name ? `Project: ${taskRow.project.name}` : ''}
+              </Text>
+              {taskRow.tags.length > 0 && (
+                <Text className="text-sm text-muted-foreground">Tags: {taskRow.tags.join(', ')}</Text>
+              )}
+              <Text className="text-xs text-muted-foreground">
+                Created {formatRelative(taskRow.createdAt)} · Updated {formatRelative(taskRow.updatedAt)}
+              </Text>
             </View>
-            <Text className="text-sm text-muted-foreground">
-              Due: {taskRow.dueDate ? formatDateTime(taskRow.dueDate) : 'No due date'}
-            </Text>
-            <Text className="text-sm text-muted-foreground">
-              {taskRow.project?.name ? `Project: ${taskRow.project.name}` : ''}
-            </Text>
-            {taskRow.tags.length > 0 && (
-              <Text className="text-sm text-muted-foreground">Tags: {taskRow.tags.join(', ')}</Text>
-            )}
-          </View>
-          <View className="mt-2 flex-row items-center justify-between border-t border-border pt-3">
-            <Text className="text-xs text-muted-foreground">{taskRow.watcherCount ?? 0} watching</Text>
-            <TSButton
-              variant={taskRow.watching ? 'outline' : 'default'}
-              tsSize="sm"
-              loading={toggleWatch.isPending}
-              icon={
-                <Notification
-                  size={16}
-                  variant="Outline"
-                  color={taskRow.watching ? tokens.textSecondary : '#fff'}
+            <View className="mt-2 flex-row gap-2">
+              <View className="flex-1">
+                <TSSelect
+                  value={taskRow.status}
+                  onValueChange={(value) => quickUpdate.mutate({ status: value as Task['status'] })}
+                  options={STATUS_OPTIONS}
                 />
-              }
-              onPress={() => toggleWatch.mutate()}
-              textClassName={taskRow.watching ? 'text-foreground' : undefined}
-            >
-              {taskRow.watching ? 'Unwatch' : 'Watch'}
-            </TSButton>
-          </View>
+              </View>
+              <View className="flex-1">
+                <TSSelect
+                  value={taskRow.priority}
+                  onValueChange={(value) => quickUpdate.mutate({ priority: value as Task['priority'] })}
+                  options={PRIORITY_OPTIONS}
+                />
+              </View>
+            </View>
+            <View className="mt-2 flex-row items-center justify-between border-t border-border pt-3">
+              <Text className="text-xs text-muted-foreground">{taskRow.watcherCount ?? 0} watching</Text>
+              <View className="flex-row items-center gap-2">
+                <TaskEditDialog
+                  task={taskRow}
+                  onUpdated={() => {
+                    queryClient.invalidateQueries({ queryKey: queryKeys.task(id) });
+                    queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
+                  }}
+                  trigger={
+                    <TSButton
+                      variant="outline"
+                      tsSize="sm"
+                      icon={<Edit2 size={16} variant="Outline" color={tokens.textSecondary} />}
+                      textClassName="text-foreground"
+                    >
+                      Edit
+                    </TSButton>
+                  }
+                />
+                <TSButton
+                  variant={taskRow.watching ? 'outline' : 'default'}
+                  tsSize="sm"
+                  loading={toggleWatch.isPending}
+                  icon={
+                    <Notification
+                      size={16}
+                      variant="Outline"
+                      color={taskRow.watching ? tokens.textSecondary : '#fff'}
+                    />
+                  }
+                  onPress={() => toggleWatch.mutate()}
+                  textClassName={taskRow.watching ? 'text-foreground' : undefined}
+                >
+                  {taskRow.watching ? 'Unwatch' : 'Watch'}
+                </TSButton>
+              </View>
+            </View>
         </View>
       </TSCard>
 
@@ -350,6 +440,12 @@ export default function TaskDetailScreen() {
                 className="min-h-12 flex-row items-center gap-2.5 border-b border-border px-3 py-2.5"
                 style={index === attachments.length - 1 ? { borderBottomWidth: 0 } : undefined}
               >
+                {attachment.mime.startsWith('image/') && attachment.url ? (
+                  <Image
+                    source={{ uri: attachment.url }}
+                    style={{ width: 44, height: 44, borderRadius: 8, borderWidth: 1, borderColor: tokens.border }}
+                  />
+                ) : null}
                 <View className="flex-1 gap-0.5">
                   <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
                     {attachment.name}
@@ -376,6 +472,37 @@ export default function TaskDetailScreen() {
           </View>
         )}
       </TSCard>
+
+      {pendingQuestion && (
+        <View className="rounded-lg border border-[var(--ts-warning-500)]/40 bg-[var(--ts-warning-100)]/10 p-4">
+          <View className="flex-row items-start gap-2.5">
+            <Radar size={18} variant="TwoTone" color={tokens.warning} />
+            <View className="flex-1 gap-2">
+              <Text className="text-sm font-semibold text-foreground">Agent is waiting for your answer</Text>
+              <Text className="text-xs leading-5 text-secondary-foreground">
+                {pendingQuestion.body.replace(/^\[question\]\s*/, '')}
+              </Text>
+              <View className="flex-row items-center gap-2">
+                <View className="flex-1">
+                  <TSInput
+                    value={askReply}
+                    onChangeText={setAskReply}
+                    placeholder="Type your answer..."
+                  />
+                </View>
+                <TSButton
+                  tsSize="sm"
+                  loading={answerQuestion.isPending}
+                  disabled={!askReply.trim()}
+                  onPress={() => answerQuestion.mutate(askReply.trim())}
+                >
+                  Answer
+                </TSButton>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
 
       <View className="flex-row items-center justify-between">
         <Text className="text-base font-semibold text-foreground">Comments</Text>

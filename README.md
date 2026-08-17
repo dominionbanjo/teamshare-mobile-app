@@ -19,12 +19,13 @@ variables (secrets), and message each other with mentions and notifications.
 | Company & team screens (list/detail, member management) | ✅ |
 | Invitations (accept/decline from the app) | ✅ |
 | Projects (list, detail with tabs, create dialog) | ✅ |
-| Tasks (list, detail, status/priority, attachments, create dialog) | ✅ |
+| Tasks (list, detail, status/priority, attachments, create dialog, subtasks/checklists) | ✅ |
 | Comments, threads & @mentions | ✅ |
 | Notifications (in-app list, read/unread, deep links) | ✅ |
 | Env vars (masked list, reveal, export) | ✅ |
 | Documents (list, upload, open) | ✅ |
-| Project chat (realtime via Socket.IO) | ✅ |
+| Project chat (realtime via Socket.IO; agent replies appear as normal messages — no live draft rendering) | ✅ |
+| Agents (personal + company list/detail/create, capability toggles, Connect card, AI badges) | ✅ |
 | Search, analytics, billing screens | ✅ |
 | Profile / settings | ✅ |
 

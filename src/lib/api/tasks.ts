@@ -19,8 +19,9 @@ export interface CreateTaskPayload {
   description?: string;
   status?: Task['status'];
   priority?: Task['priority'];
-  assigneeId?: string;
-  dueDate?: string;
+  /** null clears the value on update (mirrors backend nullable DTO). */
+  assigneeId?: string | null;
+  dueDate?: string | null;
   tags?: string[];
   /** One-shot creation: checklist rows on the task (IMP-240). */
   checklist?: ChecklistEntryPayload[];
@@ -32,8 +33,15 @@ export type UpdateTaskPayload = Partial<Omit<CreateTaskPayload, 'projectId'>>;
 
 export interface ListTasksParams {
   projectId?: string;
+  companyId?: string;
   status?: Task['status'];
+  priority?: Task['priority'];
   assigneeId?: string;
+  createdBy?: string;
+  creatorIsAgent?: boolean;
+  /** Due on or before this ISO datetime (inclusive). */
+  dueBefore?: string;
+  search?: string;
   page?: number;
   pageSize?: number;
 }

@@ -18,10 +18,16 @@
     --ts-text-secondary: #475569;
     --ts-text-muted: #94a3b8;
     --ts-success-500: #10b981;
+    --ts-success-100: #d1fae5;
     --ts-warning-500: #f59e0b;
+    --ts-warning-100: #fef3c7;
     --ts-error-500: #ef4444;
+    --ts-error-100: #fee2e2;
     --ts-info-500: #3b82f6;
+    --ts-info-100: #dbeafe;
     --ts-violet-500: #8b5cf6;
+    --ts-violet-100: #ede9fe;
+    --ts-primary-100: #e0e7ff;
 
     /* shadcn/reusables mapping */
     --background: 0 0% 100%;
@@ -58,10 +64,16 @@
     --ts-text-secondary: #94a3b8;
     --ts-text-muted: #64748b;
     --ts-success-500: #34d399;
+    --ts-success-100: #14532d;
     --ts-warning-500: #fbbf24;
+    --ts-warning-100: #78350f;
     --ts-error-500: #f87171;
+    --ts-error-100: #7f1d1d;
     --ts-info-500: #60a5fa;
+    --ts-info-100: #1e3a8a;
     --ts-violet-500: #a78bfa;
+    --ts-violet-100: #4c1d95;
+    --ts-primary-100: #312e81;
 
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
