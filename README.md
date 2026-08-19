@@ -59,11 +59,11 @@ Set in your shell or `.env.local` (all optional — defaults point at your machi
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `EXPO_PUBLIC_API_URL` | `http://localhost:4000/api` | REST API base (envelope client) |
+| `EXPO_PUBLIC_API_URL` | `http://localhost:4000` | REST API base (envelope client) |
 | `EXPO_PUBLIC_WS_URL` | `http://localhost:4000` | Socket.IO origin for realtime chat |
 
 On a physical device, replace `localhost` with your machine's **LAN IP**
-(e.g. `http://192.168.1.10:4000/api`).
+(e.g. `http://192.168.1.10:4000`).
 
 ## Scripts
 

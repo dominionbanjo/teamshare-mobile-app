@@ -104,7 +104,7 @@ export function buildMcpSnippet(): string {
       mcp: {
         teamshare: {
           type: 'remote',
-          url: 'http://localhost:4000/api/mcp',
+          url: 'http://localhost:4000/mcp',
           headers: { 'X-Api-Key': 'ts_...' },
         },
       },

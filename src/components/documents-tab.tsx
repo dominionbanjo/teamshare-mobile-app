@@ -31,7 +31,7 @@ import { queryKeys } from '@/lib/query/keys';
 import { DocumentLinkFormSchema, type DocumentLinkFormInput } from '@/lib/validation/schemas';
 import { tokens } from '@/constants/theme';
 
-const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
+const API_ORIGIN = API_BASE_URL;
 
 export type DocumentsTabProps = {
   projectId: string;
