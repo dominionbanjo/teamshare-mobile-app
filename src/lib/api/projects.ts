@@ -1,10 +1,18 @@
 import { apiFetch, apiFetchEnvelope } from './client';
-import type { Paginated, Project, ProjectMember, Task } from './types';
+import type { BuildQueue, Paginated, Project, ProjectMember, Task } from './types';
 
 export interface CreateProjectPayload {
   name: string;
   teamId?: string;
   companyId?: string;
+}
+
+export interface UpdateProjectPayload {
+  name?: string;
+  status?: 'active' | 'archived';
+  blockUnassignedAgentWork?: boolean;
+  /** IMP-680: the agent that works this project's ready-for-dev build queue. */
+  buildAgentId?: string | null;
 }
 
 async function toPaginated<T>(result: { data: T[]; pagination?: Paginated<T>['pagination'] }): Promise<Paginated<T>> {
@@ -25,6 +33,26 @@ export async function getProject(token: string, id: string): Promise<Project> {
 
 export async function createProject(token: string, payload: CreateProjectPayload): Promise<Project> {
   return apiFetch<Project>('/projects', { method: 'POST', body: payload, token });
+}
+
+export async function updateProject(token: string, id: string, payload: UpdateProjectPayload): Promise<Project> {
+  return apiFetch<Project>(`/projects/${id}`, { method: 'PATCH', body: payload, token });
+}
+
+// ---------------------------------------------------------------------------
+// Build mode (IMP-680)
+// ---------------------------------------------------------------------------
+
+export async function getBuildQueue(token: string, projectId: string): Promise<BuildQueue> {
+  return apiFetch<BuildQueue>(`/projects/${projectId}/build/queue`, { token });
+}
+
+export async function startBuild(token: string, projectId: string): Promise<{ started: boolean }> {
+  return apiFetch<{ started: boolean }>(`/projects/${projectId}/build/start`, { method: 'POST', token });
+}
+
+export async function stopBuild(token: string, projectId: string): Promise<{ stopped: boolean }> {
+  return apiFetch<{ stopped: boolean }>(`/projects/${projectId}/build/stop`, { method: 'POST', token });
 }
 
 export async function listProjectTasks(

@@ -111,6 +111,8 @@ export const CreateTaskSchema = z.object({
   assigneeId: uuidSchema.optional(),
   dueDate: z.string().datetime().optional(),
   tags: z.array(z.string().min(1).max(24)).max(10).default([]),
+  /** IMP-680: ready for the project's build agent (join build queue). */
+  readyForDev: z.boolean().optional(),
 });
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 
@@ -199,6 +201,8 @@ export const CreateTaskFormSchema = z.object({
   dueDate: DueDateSchema,
   /** Comma-separated tags - parsed into a string[] before submit (IMP-240). */
   tagsText: z.string().max(240).optional(),
+  /** IMP-680: join the project build queue (worked by the build agent). */
+  readyForDev: z.boolean().optional(),
 });
 export type CreateTaskFormInput = z.infer<typeof CreateTaskFormSchema>;
 

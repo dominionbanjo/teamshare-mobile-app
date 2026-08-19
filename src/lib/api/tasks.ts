@@ -23,6 +23,8 @@ export interface CreateTaskPayload {
   assigneeId?: string | null;
   dueDate?: string | null;
   tags?: string[];
+  /** IMP-680: ready for the project's build agent (join build queue). */
+  readyForDev?: boolean;
   /** One-shot creation: checklist rows on the task (IMP-240). */
   checklist?: ChecklistEntryPayload[];
   /** One-shot creation: top-level subtasks (IMP-240). */

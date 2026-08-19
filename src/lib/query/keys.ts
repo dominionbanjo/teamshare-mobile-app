@@ -6,6 +6,8 @@ export const queryKeys = {
   projectEnvVars: (projectId: string) => ['projects', projectId, 'env-vars'] as const,
   projectEnvVarAudit: (projectId: string) => ['projects', projectId, 'env-vars', 'audit'] as const,
   projectDocuments: (projectId: string) => ['projects', projectId, 'documents'] as const,
+  /** IMP-680: ordered ready-for-dev build queue (pending + blocked). */
+  projectBuildQueue: (projectId: string) => ['projects', projectId, 'build', 'queue'] as const,
   chatChannels: (projectId: string) => ['projects', projectId, 'chat-channels'] as const,
   chatMessages: (projectId: string, channelId: string) =>
     ['projects', projectId, 'chat', channelId] as const,

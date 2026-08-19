@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Message, Profile2User, TaskSquare } from 'iconsax-react-native';
+import { Box, Message, Profile2User, TaskSquare } from 'iconsax-react-native';
 import * as React from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 
+import { BuildTab } from '@/components/build-tab';
 import { ChatPanel } from '@/components/chat-panel';
 import { ChatChannels } from '@/components/chat-channels';
 import { DocumentsTab } from '@/components/documents-tab';
@@ -23,7 +24,7 @@ import {
   TSSkeletonList,
   TSTabs,
 } from '@/components/shared';
-import { listProjectMembers, listProjectTasks, getProject } from '@/lib/api/projects';
+import { listProjectMembers, listProjectTasks, getProject, getBuildQueue } from '@/lib/api/projects';
 import { listChatChannels } from '@/lib/api/chat';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
@@ -54,6 +55,12 @@ export default function ProjectDetailScreen() {
     queryKey: queryKeys.chatChannels(id),
     queryFn: () => listChatChannels(token ?? '', id),
     enabled: !!token && !!id,
+  });
+  const buildQueue = useQuery({
+    queryKey: queryKeys.projectBuildQueue(id),
+    queryFn: () => getBuildQueue(token ?? '', id),
+    enabled: !!token && !!id,
+    refetchInterval: 15_000,
   });
   // IMP-250: chat notifications deep-link /projects/:id?channel=:cid - land
   // on that conversation instead of the first channel.
@@ -173,6 +180,10 @@ export default function ProjectDetailScreen() {
     </View>
   );
 
+  const buildContent = (
+    <BuildTab projectId={id} members={members.data?.items ?? []} canManage={currentRole !== 'viewer'} />
+  );
+
   const infoContent = (
     <View className="gap-3">
       <TSCard title="Details">
@@ -230,6 +241,7 @@ export default function ProjectDetailScreen() {
             void project.refetch();
             void tasks.refetch();
             void members.refetch();
+            void buildQueue.refetch();
           }}
           tintColor={tokens.primary}
         />
@@ -245,6 +257,12 @@ export default function ProjectDetailScreen() {
         items={[
           { value: 'tasks', label: 'Tasks', count: tasks.data?.items.length ?? 0, content: tasksContent },
           { value: 'members', label: 'Members', count: members.data?.items.length ?? 0, content: membersContent },
+          {
+            value: 'build',
+            label: 'Build',
+            count: (buildQueue.data?.pending.length ?? 0) + (buildQueue.data?.blocked.length ?? 0) || undefined,
+            content: buildContent,
+          },
           { value: 'env', label: 'Env Vars', content: <EnvVarsTab projectId={id} canAudit={currentRole === 'owner'} /> },
           { value: 'documents', label: 'Documents', content: <DocumentsTab projectId={id} /> },
           { value: 'chat', label: 'Chat', content: chatContent },

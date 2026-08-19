@@ -6,12 +6,14 @@ import { ActivityIndicator, Alert, Image, Pressable, Text, View } from 'react-na
 import {
   TSDialog,
   TSForm,
+  TSFormField,
   TSFormFieldError,
   TSFormSelect,
   TSFormTextInput,
   TSButton,
   TSCheckbox,
   TSInput,
+  TSSwitch,
 } from '@/components/shared';
 import {
   createTask,
@@ -242,6 +244,7 @@ function TaskFormDialog({
           .map((tag) => tag.trim())
           .filter(Boolean)
           .slice(0, 10),
+        readyForDev: values.readyForDev ?? false,
       };
 
       if (editing) {
@@ -348,6 +351,7 @@ function TaskFormDialog({
         assigneeId: task!.assigneeId ?? '',
         dueDate: task!.dueDate ? task!.dueDate.slice(0, 10) : '',
         tagsText: task!.tags.join(', '),
+        readyForDev: task!.readyForDev ?? false,
       }
     : {
         title: '',
@@ -357,6 +361,7 @@ function TaskFormDialog({
         assigneeId: '',
         dueDate: '',
         tagsText: '',
+        readyForDev: false,
       };
 
   const existingAttachments = attachmentsQuery.data ?? [];
@@ -385,7 +390,7 @@ function TaskFormDialog({
         schema={TaskFormSchema}
         defaultValues={defaultValues}
         onSubmit={(values) => mutation.mutate(values)}
-        render={({ handleSubmit }) => (
+        render={({ handleSubmit, watch, setValue }) => (
           <>
             <TSFormTextInput name="title" label="Title" placeholder="e.g. Ship onboarding flow" required maxLength={120} />
             <TSFormTextInput
@@ -420,6 +425,16 @@ function TaskFormDialog({
               placeholder="bug, api, v2 - comma separated"
               autoCapitalize="none"
             />
+            <TSFormField
+              name="readyForDev"
+              label="Ready for dev"
+              hint="Adds this task to the project build queue - the build agent works it in order."
+            >
+              <TSSwitch
+                checked={watch('readyForDev') === true}
+                onValueChange={(checked) => setValue('readyForDev', checked, { shouldValidate: true })}
+              />
+            </TSFormField>
 
             <EditorSection title="Subtasks" count={subtasks.length} onAdd={addSubtaskRow}>
               {subtasks.map((sub, index) => (

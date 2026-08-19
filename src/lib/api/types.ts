@@ -119,6 +119,8 @@ export interface Project {
   createdBy: string;
   status: ProjectStatusValue;
   teamId?: string | null;
+  /** IMP-680: the agent that works this project's ready-for-dev queue. */
+  buildAgentId?: string | null;
   createdAt?: string;
   members?: ProjectMember[];
   tasks?: Task[];
@@ -159,6 +161,10 @@ export interface Task {
   subtaskCount?: number;
   checklistTotal?: number;
   checklistDone?: number;
+  /** IMP-680: ready for the project's build agent (in the build queue). */
+  readyForDev?: boolean;
+  /** IMP-680: queue ordering for ready-for-dev tasks (1, 2, 3...). */
+  sortOrder?: number | null;
 }
 
 /** Nestable sub-work item under a task (IMP-240). */
@@ -384,4 +390,47 @@ export interface AgentLogRow {
   task?: { id: string; title: string } | null;
   detail?: unknown;
   createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Build mode (IMP-680)
+// ---------------------------------------------------------------------------
+
+/** Open ask-human question blocking a build task (null = not blocked). */
+export interface BuildQuestion {
+  id: string;
+  body: string;
+  askedById?: string | null;
+  askedBy?: { id: string; name: string; kind: string } | null;
+  askedAt: string;
+}
+
+/** One entry in the project build queue (pending or blocked). */
+export interface BuildQueueEntry {
+  task: Pick<
+    Task,
+    'id' | 'title' | 'status' | 'priority' | 'assigneeId' | 'readyForDev' | 'sortOrder'
+  >;
+  /** 1-based position in the work order. */
+  position: number;
+  /** Present only when the entry is blocked on an open question. */
+  question?: BuildQuestion | null;
+}
+
+/** GET /projects/:id/build/queue payload. */
+export interface BuildQueue {
+  project: { id: string; name: string };
+  buildAgent: { id: string; name: string; kind: string } | null;
+  running: boolean;
+  pending: BuildQueueEntry[];
+  blocked: BuildQueueEntry[];
+}
+
+/** Snapshot of the build agent's current run (GET /agents/:id/state). */
+export interface AgentBuildState {
+  status: 'running' | 'idle' | 'stopping';
+  done: number;
+  total: number;
+  currentTaskId?: string | null;
+  currentTitle?: string | null;
 }
