@@ -657,9 +657,8 @@ export function ChatPanel({
               }}
               onBlur={() => emitTyping(false)}
               placeholder="Type a message… use @name to mention someone"
-              multiline
               maxLength={4_000}
-              className="min-h-10 max-h-24"
+              className="h-10"
             />
           </View>
           <TSButton

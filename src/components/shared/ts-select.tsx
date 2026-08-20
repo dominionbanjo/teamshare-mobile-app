@@ -33,13 +33,15 @@ export function TSSelect({
       disabled={disabled}
       className={cn('w-full', className)}
     >
-      <SelectTrigger className="h-10 flex-row items-center justify-between rounded-md border border-input bg-background px-3">
-        <SelectValue className="text-sm text-foreground" placeholder={placeholder} />
+      <SelectTrigger className="h-10 min-w-0 w-full flex-row items-center justify-between rounded-md border border-input bg-background px-3">
+        <SelectValue className="min-w-0 flex-1 text-sm text-foreground" placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-surface shadow-lg">
+      <SelectContent className="bg-surface shadow-lg native:max-w-[75vw]">
         {options.map((opt) => (
           <SelectItem key={opt.value} value={opt.value} label={opt.label} className="h-9">
-            <Text className="text-sm text-foreground">{opt.label}</Text>
+            <Text numberOfLines={1} className="flex-1 shrink text-sm text-foreground">
+              {opt.label}
+            </Text>
           </SelectItem>
         ))}
       </SelectContent>

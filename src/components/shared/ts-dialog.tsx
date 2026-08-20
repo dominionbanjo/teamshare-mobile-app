@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, type ViewProps } from 'react-native';
+import { ScrollView, View, type ViewProps } from 'react-native';
 
 import { cn } from '@/lib/utils';
 import {
@@ -57,7 +57,14 @@ export function TSDialog({
             {description && <DialogDescription className="text-sm text-muted-foreground">{description}</DialogDescription>}
           </DialogHeader>
         )}
-        {children}
+        <ScrollView
+          className="min-h-0 flex-1"
+          contentContainerClassName="gap-4"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </ScrollView>
         {footer && <DialogFooter>{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>
