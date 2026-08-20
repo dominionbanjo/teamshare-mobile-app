@@ -241,6 +241,7 @@ export const AgentCapabilitySchema = z.enum([
   'documents:read',
   'documents:write',
   'search',
+  'web',
   'projects:read',
 ]);
 export type AgentCapability = z.infer<typeof AgentCapabilitySchema>;

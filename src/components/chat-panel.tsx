@@ -447,7 +447,7 @@ export function ChatPanel({
         multiline
         maxLength={4_000}
       />
-      <View className="mt-3 flex-row justify-end gap-2">
+      <View className="flex-row justify-end gap-2 mt-3">
         <TSButton variant="outline" onPress={() => setEditing(null)}>
           Cancel
         </TSButton>
@@ -466,7 +466,7 @@ export function ChatPanel({
       {/* Header - presence signature */}
       <View className="flex-row items-center justify-between border-b border-border bg-muted/40 px-3 py-2.5">
         <View className="flex-row items-center gap-2">
-          <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+          <View className="items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
             <MessageText size={16} variant="Bold" color={tokens.primary} />
           </View>
           <View>
@@ -528,11 +528,11 @@ export function ChatPanel({
           renderItem={({ item }) =>
             item.kind === 'divider' ? (
               <View className="flex-row items-center gap-3 py-1">
-                <View className="h-px flex-1 bg-border" />
+                <View className="flex-1 h-px bg-border" />
                 <Text className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   {item.label}
                 </Text>
-                <View className="h-px flex-1 bg-border" />
+                <View className="flex-1 h-px bg-border" />
               </View>
             ) : (
               <MessageBubble
@@ -576,19 +576,19 @@ export function ChatPanel({
         <View style={{ borderTopWidth: 1, borderTopColor: `${tokens.warning}40`, backgroundColor: `${tokens.warning}10` }} className="px-4 py-3">
           <View className="flex-row items-start gap-2.5">
             <Radar size={18} variant="TwoTone" color={tokens.warning} className="mt-0.5 shrink-0" />
-            <View className="min-w-0 flex-1">
+            <View className="flex-1 min-w-0">
               <Text className="text-sm font-semibold text-foreground">
                 Agent is waiting for your answer
               </Text>
               <Text className="mt-1 text-xs leading-5 text-secondary-foreground" numberOfLines={4}>
                 {pendingQuestion.body.replace(/^\[question\]\s*/, '')}
               </Text>
-              <View className="mt-3 flex-row gap-2">
+              <View className="flex-row gap-2 mt-3">
                 <TSInput
                   value={answerDraft}
                   onChangeText={setAnswerDraft}
                   placeholder="Type your answer…"
-                  className="h-9 flex-1"
+                  className="flex-1 h-9"
                   onSubmitEditing={() => {
                     if (answerDraft.trim()) {
                       setInput(answerDraft.trim());
@@ -618,12 +618,12 @@ export function ChatPanel({
         </View>
       )}
 
-      <View className="gap-1 border-t border-border p-2">
+      <View className="gap-1 p-2 border-t border-border">
         {/* Pending attachment chip */}
         {(attachment || uploading) && (
           <View className="flex-row items-center gap-2 rounded-md border border-border bg-muted px-2.5 py-1.5">
             <DocumentText size={16} variant="Outline" color={tokens.primary} />
-            <Text className="flex-1 truncate text-xs font-medium text-foreground" numberOfLines={1}>
+            <Text className="flex-1 text-xs font-medium truncate text-foreground" numberOfLines={1}>
               {uploading ? `Uploading ${uploading}…` : attachment?.name}
             </Text>
             {!uploading && attachment && (
@@ -645,7 +645,7 @@ export function ChatPanel({
             loading={!!uploading}
             disabled={!!uploading}
             accessibilityLabel="Attach a file"
-            className="h-10 w-10 items-center justify-center px-0"
+            className="items-center justify-center w-10 h-10 px-0"
             icon={<AttachCircle size={18} variant="Outline" color={tokens.textSecondary} />}
           />
           <View className="flex-1">
@@ -656,7 +656,7 @@ export function ChatPanel({
                 emitTyping(true);
               }}
               onBlur={() => emitTyping(false)}
-              placeholder="Type a message… use @name to mention someone"
+              placeholder="use @name to mention"
               maxLength={4_000}
               className="h-10"
             />
@@ -666,7 +666,7 @@ export function ChatPanel({
             loading={pending}
             disabled={(!input.trim() && !attachment) || !!uploading}
             accessibilityLabel="Send message"
-            className="h-10 w-10 items-center justify-center px-0"
+            className="items-center justify-center w-10 h-10 px-0"
             icon={<Send2 size={18} variant="Bold" color="#fff" />}
           />
         </View>
