@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AddSquare, Profile2User, Trash, UserAdd } from 'iconsax-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { errorAlert } from '@/components/shared/error-alert';
 
 import {
   TSBadge,
@@ -111,7 +112,7 @@ export default function CompanyDetailScreen() {
       router.back();
     },
     onError: (err) => {
-      Alert.alert('Could not delete company', err.message);
+      errorAlert(err, "Could not delete company");
     },
   });
 
@@ -124,7 +125,7 @@ export default function CompanyDetailScreen() {
       invalidateCompany();
     },
     onError: (err) => {
-      Alert.alert('Could not change role', err.message);
+      errorAlert(err, "Could not change role");
     },
     onSettled: () => setRolePendingId(null),
   });
@@ -135,7 +136,7 @@ export default function CompanyDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.companyMembers(id) });
     },
     onError: (err) => {
-      Alert.alert('Could not remove member', err.message);
+      errorAlert(err, "Could not remove member");
     },
   });
 

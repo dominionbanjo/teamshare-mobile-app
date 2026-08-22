@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddSquare, Edit2, Trash } from 'iconsax-react-native';
 import * as React from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { errorAlert } from '@/components/shared/error-alert';
 
 import {
   TSButton,
@@ -71,7 +72,7 @@ export function ChatChannels({ projectId, activeChannelId, canManage, onSelect }
       refresh();
     },
     onError: (err) =>
-      Alert.alert('Could not create conversation', err instanceof Error ? err.message : 'Try again.'),
+      errorAlert(err, "Could not create conversation"),
   });
 
   const updateMutation = useMutation({
@@ -86,7 +87,7 @@ export function ChatChannels({ projectId, activeChannelId, canManage, onSelect }
       refresh();
     },
     onError: (err) =>
-      Alert.alert('Could not update conversation', err instanceof Error ? err.message : 'Try again.'),
+      errorAlert(err, "Could not update conversation"),
   });
 
   const deleteMutation = useMutation({
@@ -96,7 +97,7 @@ export function ChatChannels({ projectId, activeChannelId, canManage, onSelect }
       refresh();
     },
     onError: (err) =>
-      Alert.alert('Could not delete conversation', err instanceof Error ? err.message : 'Try again.'),
+      errorAlert(err, "Could not delete conversation"),
   });
 
   const openCreate = () => {

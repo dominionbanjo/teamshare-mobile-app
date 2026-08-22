@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Edit2, Trash } from 'iconsax-react-native';
 import * as React from 'react';
 import { Alert, RefreshControl, Text, View } from 'react-native';
+import { errorAlert } from '@/components/shared/error-alert';
 
 import {
   TSButton,
@@ -50,7 +51,7 @@ export default function AgentDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
     },
     onError: (err) => {
-      Alert.alert('Could not update agent', err.message);
+      errorAlert(err, "Could not update agent");
     },
   });
 
@@ -61,7 +62,7 @@ export default function AgentDetailScreen() {
       router.back();
     },
     onError: (err) => {
-      Alert.alert('Could not delete agent', err.message);
+      errorAlert(err, "Could not delete agent");
     },
   });
 

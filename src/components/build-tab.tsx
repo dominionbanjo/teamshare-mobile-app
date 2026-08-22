@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Box, Danger, Pause, Play, Send2 } from 'iconsax-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Alert, Text, View } from 'react-native';
+import { errorAlert } from '@/components/shared/error-alert';
 
 import {
   TSButton,
@@ -55,7 +56,7 @@ export function BuildTab({ projectId, members, canManage = false }: BuildTabProp
     onSuccess: () => {
       invalidate();
     },
-    onError: (err) => Alert.alert('Could not update build agent', err.message),
+    onError: (err) => errorAlert(err, "Could not update build agent"),
   });
 
   const start = useMutation({
@@ -63,7 +64,7 @@ export function BuildTab({ projectId, members, canManage = false }: BuildTabProp
     onSuccess: () => {
       invalidate();
     },
-    onError: (err) => Alert.alert('Could not start the build', err.message),
+    onError: (err) => errorAlert(err, "Could not start the build"),
   });
 
   const stop = useMutation({
@@ -71,7 +72,7 @@ export function BuildTab({ projectId, members, canManage = false }: BuildTabProp
     onSuccess: () => {
       invalidate();
     },
-    onError: (err) => Alert.alert('Could not stop the build', err.message),
+    onError: (err) => errorAlert(err, "Could not stop the build"),
   });
 
   const answer = useMutation({
@@ -80,7 +81,7 @@ export function BuildTab({ projectId, members, canManage = false }: BuildTabProp
     onSuccess: () => {
       invalidate();
     },
-    onError: (err) => Alert.alert('Could not post the answer', err.message),
+    onError: (err) => errorAlert(err, "Could not post the answer"),
   });
 
   if (queue.isError) {

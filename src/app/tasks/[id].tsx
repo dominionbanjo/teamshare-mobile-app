@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Camera, CloseCircle, DocumentUpload, Edit2, Gallery, Message, MessageAdd1, Notification, Radar } from 'iconsax-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Alert, Image, Pressable, RefreshControl, Text, View } from 'react-native';
+import { errorAlert } from '@/components/shared/error-alert';
 
 import {
   PriorityBadge,
@@ -109,7 +110,7 @@ export default function TaskDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.task(id) });
     },
     onError: (err) => {
-      Alert.alert('Could not update watch status', err.message);
+      errorAlert(err, "Could not update watch status");
     },
   });
 
@@ -122,7 +123,7 @@ export default function TaskDetailScreen() {
       queryClient.invalidateQueries({ queryKey: queryKeys.task(id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     },
-    onError: (err) => Alert.alert('Could not update task', err.message),
+    onError: (err) => errorAlert(err, "Could not update task"),
   });
 
   // Phase B ask-human: the open question is the last agent comment starting
@@ -185,7 +186,7 @@ export default function TaskDetailScreen() {
       await uploadAttachmentCloudinary(token ?? '', { taskId: id }, file, 'task');
       void queryClient.invalidateQueries({ queryKey: queryKeys.taskAttachments(id) });
     } catch (err) {
-      Alert.alert('Upload failed', err instanceof Error ? err.message : 'Could not upload the file.');
+      errorAlert(err, "Upload failed");
     }
   };
 
@@ -201,7 +202,7 @@ export default function TaskDetailScreen() {
         mime: mimeFromName(asset.name, asset.mimeType ?? undefined),
       });
     } catch (err) {
-      Alert.alert('Upload failed', err instanceof Error ? err.message : 'Could not pick a file.');
+      errorAlert(err, "Upload failed");
     } finally {
       setUploadingKind(null);
     }
@@ -224,7 +225,7 @@ export default function TaskDetailScreen() {
         mime: asset.mimeType ?? 'image/jpeg',
       });
     } catch (err) {
-      Alert.alert('Upload failed', err instanceof Error ? err.message : 'Could not take a photo.');
+      errorAlert(err, "Upload failed");
     } finally {
       setUploadingKind(null);
     }
@@ -247,7 +248,7 @@ export default function TaskDetailScreen() {
       const file = await pickGalleryImage();
       if (file) await uploadTaskAttachment(file);
     } catch (err) {
-      Alert.alert('Upload failed', err instanceof Error ? err.message : 'Could not pick an image.');
+      errorAlert(err, "Upload failed");
     } finally {
       setUploadingKind(null);
     }
@@ -258,7 +259,7 @@ export default function TaskDetailScreen() {
       const file = await pickGalleryImage();
       if (file) setCommentImage(file);
     } catch (err) {
-      Alert.alert('Could not pick an image', err instanceof Error ? err.message : 'Try again.');
+      errorAlert(err, "Could not pick an image");
     }
   };
 

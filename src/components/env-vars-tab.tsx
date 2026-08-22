@@ -5,6 +5,7 @@ import * as Sharing from 'expo-sharing';
 import { Activity, AddSquare, Copy, ExternalDrive, Eye, Key, Trash } from 'iconsax-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, Text, View } from 'react-native';
+import { errorAlert } from '@/components/shared/error-alert';
 
 import {
   EnvTierBadge,
@@ -67,7 +68,7 @@ export function EnvVarsTab({ projectId, canAudit = false }: EnvVarsTabProps) {
       await Sharing.shareAsync(file.uri, { mimeType: 'text/plain', dialogTitle: 'Export .env' });
     },
     onError: (err) => {
-      Alert.alert('Export failed', err.message);
+      errorAlert(err, "Export failed");
     },
   });
 

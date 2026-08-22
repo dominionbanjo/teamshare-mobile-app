@@ -41,6 +41,71 @@ export class ApiError extends Error {
   }
 }
 
+// ── Error normalization helpers ────────────────────────────────────
+
+/** Check if an error is a rate limit error. */
+export function isRateLimitError(err: unknown): err is ApiError {
+  return err instanceof ApiError && err.code === 'RATE_LIMITED';
+}
+
+/** Check if an error is a network error. */
+export function isNetworkError(err: unknown): err is ApiError {
+  return err instanceof ApiError && err.code === 'NETWORK_ERROR';
+}
+
+/**
+ * Format retryAfterMs into a human-readable string.
+ * Matches the backend's formatRetryAfter output.
+ */
+export function formatRetryAfter(retryAfterMs: number): string {
+  const sec = Math.ceil(retryAfterMs / 1000);
+  if (sec <= 60) return `${sec} ${sec === 1 ? 'second' : 'seconds'}`;
+  const min = Math.ceil(sec / 60);
+  if (min <= 60) return `${min} ${min === 1 ? 'minute' : 'minutes'}`;
+  const hours = Math.ceil(min / 60);
+  if (hours <= 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  const days = Math.ceil(hours / 24);
+  return `${days} ${days === 1 ? 'day' : 'days'}`;
+}
+
+/** Extract retryAfterMs from an ApiError's details. */
+export function getRetryAfterMs(err: unknown): number | null {
+  if (!isRateLimitError(err)) return null;
+  const details = err.details as Record<string, unknown> | undefined;
+  if (details && typeof details.retryAfterMs === 'number') return details.retryAfterMs;
+  return null;
+}
+
+/**
+ * Normalize any error into a user-friendly message.
+ * Always returns a string safe for display in alerts/toasts.
+ */
+export function normalizeError(err: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  if (isRateLimitError(err)) {
+    const retryMs = getRetryAfterMs(err);
+    const retryHint = retryMs ? ` Try again in ${formatRetryAfter(retryMs)}.` : '';
+    const details = err.details as Record<string, unknown> | undefined;
+    const scopeLabel = details?.scopeLabel ?? 'this action';
+    const limit = details?.limit;
+    const current = details?.current;
+    const quota = limit != null && current != null ? ` (${current}/${limit})` : '';
+    return `Rate limit reached for ${scopeLabel}${quota}.${retryHint}`;
+  }
+  if (isNetworkError(err)) return err.message;
+  if (err instanceof ApiError) return err.message;
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
+
+/**
+ * Get a short title for error alerts.
+ */
+export function errorAlertTitle(err: unknown, contextLabel: string): string {
+  if (isRateLimitError(err)) return 'Rate limit reached';
+  if (isNetworkError(err)) return 'Connection error';
+  return contextLabel;
+}
+
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 export type ApiFetchOptions = {
