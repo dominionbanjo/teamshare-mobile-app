@@ -35,7 +35,7 @@ export function TSBadge({ className, tone = 'neutral', children, ...props }: TSB
 }
 
 const STATUS_META: Record<TaskStatus, { label: string; tone: NonNullable<TSBadgeProps['tone']> }> = {
-  open: { label: 'Open', tone: 'info' },
+  open: { label: 'Open', tone: 'error' },
   in_progress: { label: 'In Progress', tone: 'warning' },
   in_review: { label: 'In Review', tone: 'violet' },
   resolved: { label: 'Resolved', tone: 'success' },
