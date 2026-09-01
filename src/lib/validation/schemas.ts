@@ -147,7 +147,7 @@ export type CreateEnvVarInput = z.infer<typeof CreateEnvVarSchema>;
 
 export const SendChatMessageSchema = z.object({
   projectId: uuidSchema,
-  body: z.string().min(1).max(4_000),
+  body: z.string().min(1),
 });
 
 const httpUrlSchema = z
