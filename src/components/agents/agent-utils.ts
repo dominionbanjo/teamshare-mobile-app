@@ -20,7 +20,14 @@ export const AGENT_CAPABILITY_META: Record<AgentCapabilityValue, CapabilityMeta>
   'documents:read': { label: 'Read documents', description: 'Read documents (truncated - never env vars)' },
   'documents:write': { label: 'Write documents', description: 'Create and edit markdown notes + folder docs' },
   search: { label: 'Search', description: 'Global search across visible items' },
+  web: { label: 'Web access', description: 'Fetch and research web pages' },
   'projects:read': { label: 'Read projects', description: 'Read project and member context' },
+  'whiteboards:read': { label: 'Read boards', description: 'Read whiteboards and diagrams' },
+  'whiteboards:write': { label: 'Draw boards', description: 'Create and edit whiteboards and diagrams' },
+  'context:read': { label: 'Read context', description: 'Read the project cloud context (AGENTS.md)' },
+  'context:write': { label: 'Update context', description: 'Update the project cloud context' },
+  'tools:run': { label: 'Run tools', description: 'Run Tools-tab tasks (research, data, documents)' },
+  browser: { label: 'Browser debugging', description: 'Launch and control a debugging browser' },
 };
 
 export function capabilityLabel(capability: AgentCapabilityValue): string {

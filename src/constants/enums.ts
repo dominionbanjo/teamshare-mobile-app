@@ -158,22 +158,44 @@ export const AgentLogActionEnum = AgentLogActionSchema.enum;
 export const AGENT_LOG_ACTION_VALUES = AgentLogActionSchema.options;
 export type AgentLogActionValue = (typeof AGENT_LOG_ACTION_VALUES)[number];
 
-/** Capability groups shown in create/edit UIs (Read / Work / Communicate). */
+/** Capability groups shown in create/edit UIs (mirrors the web groups). */
 export const AGENT_CAPABILITY_GROUPS: Record<
-  'read' | 'work' | 'communicate',
+  'read' | 'work' | 'communicate' | 'context' | 'tools',
   { label: string; capabilities: AgentCapabilityValue[] }
 > = {
   read: {
     label: 'Read',
-    capabilities: ['tasks:read', 'chat:read', 'documents:read', 'search', 'projects:read'],
+    capabilities: [
+      'tasks:read',
+      'chat:read',
+      'documents:read',
+      'search',
+      'web',
+      'projects:read',
+    ],
   },
   work: {
     label: 'Work',
-    capabilities: ['tasks:create', 'tasks:update', 'tasks:assign', 'documents:write'],
+    capabilities: [
+      'tasks:create',
+      'tasks:update',
+      'tasks:assign',
+      'documents:write',
+      'whiteboards:read',
+      'whiteboards:write',
+    ],
   },
   communicate: {
     label: 'Communicate',
     capabilities: ['comments:create', 'chat:write'],
+  },
+  context: {
+    label: 'Context',
+    capabilities: ['context:read', 'context:write'],
+  },
+  tools: {
+    label: 'Tools',
+    capabilities: ['tools:run', 'browser'],
   },
 };
 

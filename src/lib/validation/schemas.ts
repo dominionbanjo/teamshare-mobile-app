@@ -243,6 +243,12 @@ export const AgentCapabilitySchema = z.enum([
   'search',
   'web',
   'projects:read',
+  'whiteboards:read',
+  'whiteboards:write',
+  'context:read',
+  'context:write',
+  'tools:run',
+  'browser',
 ]);
 export type AgentCapability = z.infer<typeof AgentCapabilitySchema>;
 export const AGENT_CAPABILITIES = AgentCapabilitySchema.options;
