@@ -38,7 +38,7 @@ import { createInvitation } from '@/lib/api/invitations';
 import type { CompanyMember, CompanyRoleValue } from '@/lib/api/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
-import { CreateCompanySchema, CreateInvitationSchema } from '@/lib/validation/schemas';
+import { CreateInvitationSchema, UpdateCompanySchema, type UpdateCompanyInput } from '@/lib/validation/schemas';
 import { tokens } from '@/constants/theme';
 
 const ROLE_TONE: Record<CompanyRoleValue, 'primary' | 'info' | 'violet' | 'neutral'> = {
@@ -97,7 +97,7 @@ export default function CompanyDetailScreen() {
   });
 
   const update = useMutation({
-    mutationFn: (values: { name: string; slug: string }) => updateCompany(token ?? '', id, values),
+    mutationFn: (values: UpdateCompanyInput) => updateCompany(token ?? '', id, values),
     onSuccess: () => {
       invalidateCompany();
       setSaved(true);
@@ -239,7 +239,7 @@ export default function CompanyDetailScreen() {
     <View className="gap-3">
       <TSCard title="Company details">
         <TSForm
-          schema={CreateCompanySchema}
+          schema={UpdateCompanySchema}
           defaultValues={{ name: companyRow.name, slug: companyRow.slug }}
           onSubmit={(values) => update.mutate(values)}
           render={({ handleSubmit }) => (

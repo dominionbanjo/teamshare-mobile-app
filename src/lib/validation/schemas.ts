@@ -87,8 +87,23 @@ export type SignInInput = z.infer<typeof SignInSchema>;
 
 export const CreateCompanySchema = z.object({
   name: nameSchema,
-  slug: z.string().regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers, hyphens only').min(2).max(40),
 });
+
+/** Company settings update - slug editable here (existing value), unlike create. */
+export const UpdateCompanySchema = z
+  .object({
+    name: nameSchema.optional(),
+    slug: z
+      .string()
+      .regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers, hyphens only')
+      .min(2)
+      .max(40)
+      .optional(),
+  })
+  .refine((d) => d.name !== undefined || d.slug !== undefined, {
+    message: 'Change at least one of name or slug',
+  });
+export type UpdateCompanyInput = z.infer<typeof UpdateCompanySchema>;
 export type CreateCompanyInput = z.infer<typeof CreateCompanySchema>;
 
 export const CreateInvitationSchema = z.object({ email: emailSchema, role: CompanyRoleSchema });

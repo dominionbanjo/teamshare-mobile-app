@@ -88,7 +88,7 @@ export default function WorkspaceIntroScreen() {
     }
   };
 
-  const onCompany = async (values: { name: string; slug: string }) => {
+  const onCompany = async (values: { name: string }) => {
     setError(null);
     setPending(true);
     try {
@@ -186,17 +186,9 @@ export default function WorkspaceIntroScreen() {
                     placeholder="Acme Inc."
                     required
                   />
-                  <TSFormTextInput
-                    name="slug"
-                    label="Slug"
-                    placeholder="acme"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    required
-                  />
                   {preview ? (
                     <Text className="text-xs text-muted-foreground">
-                      URL preview: teamshare.app/{preview}
+                      URL preview (approximate): teamshare.app/{preview}
                     </Text>
                   ) : null}
                   <TSButton onPress={handleSubmit((values) => void onCompany(values))} loading={pending}>

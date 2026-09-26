@@ -3,7 +3,8 @@ import type { Company, CompanyMember, CompanyMembershipRow, Membership } from '.
 
 export interface CreateCompanyPayload {
   name: string;
-  slug: string;
+  /** Optional - the backend auto-generates it from `name` when omitted. */
+  slug?: string;
 }
 
 export interface UpdateCompanyPayload {
