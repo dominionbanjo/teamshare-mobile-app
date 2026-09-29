@@ -36,6 +36,7 @@ import { TaskEditDialog } from '@/components/task-create-dialog';
 import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
 import { formatDateTime, formatRelative } from '@/lib/format';
+import { displayAuthorName } from '@/lib/format/deleted-author';
 import { CommentFormSchema, type CommentFormInput } from '@/lib/validation/schemas';
 import { tokens } from '@/constants/theme';
 
@@ -646,8 +647,8 @@ function CommentBody({ comment, memberNames }: { comment: Comment; memberNames: 
   return (
     <View className="gap-1.5">
       <View className="flex-row items-center gap-2">
-        <TSAvatar name={comment.author?.name ?? 'Unknown'} src={comment.author?.avatarUrl} size={24} />
-        <Text className="text-sm font-semibold text-foreground">{comment.author?.name ?? 'Unknown'}</Text>
+        <TSAvatar name={displayAuthorName(comment.author)} src={comment.author?.avatarUrl} size={24} />
+        <Text className="text-sm font-semibold text-foreground">{displayAuthorName(comment.author)}</Text>
         {comment.author?.kind === 'agent' && <TSAgentBadge />}
         <Text className="text-xs text-muted-foreground">{formatRelative(comment.createdAt)}</Text>
       </View>

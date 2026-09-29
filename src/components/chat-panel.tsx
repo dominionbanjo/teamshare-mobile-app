@@ -35,6 +35,7 @@ import {
 } from '@/lib/api/chat';
 import { presignAttachment, uploadToCloudinary } from '@/lib/api/uploads';
 import type { ChatMessage } from '@/lib/api/types';
+import { displayAuthorName } from '@/lib/format/deleted-author';
 import { useAuth } from '@/lib/auth/auth-context';
 import { cn } from '@/lib/utils';
 import { formatRelative } from '@/lib/format';
@@ -707,7 +708,13 @@ function MessageBubble({
   const temp = isTemp(message);
   const failed = temp && message.failed;
   const pending = temp && message.pending;
-  const authorName = !temp ? (message.author?.name ?? 'Unknown') : isOwn ? 'You' : 'Unknown';
+  // A message outlives its author (author FKs are SET NULL), so a missing
+  // author means "deleted agent" rather than an unknown person.
+  const authorName = !temp
+    ? displayAuthorName(message.author)
+    : isOwn
+      ? 'You'
+      : 'Unknown';
 
   return (
     <View className={cn('max-w-[84%]', isOwn ? 'self-end' : 'self-start', grouped ? '' : 'mt-1')}>
