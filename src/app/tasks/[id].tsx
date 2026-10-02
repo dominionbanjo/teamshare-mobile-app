@@ -29,7 +29,7 @@ import { TSAgentBadge } from '@/components/agents/agent-avatar';
 import { createComment, listTaskAttachments, listTaskComments } from '@/lib/api/comments';
 import { listProjectMembers } from '@/lib/api/projects';
 import { getTask, listSubtasks, listTaskChecklistItems, unwatchTask, updateTask, watchTask } from '@/lib/api/tasks';
-import { deleteAttachment, mimeFromName, uploadAttachmentCloudinary, type LocalFile } from '@/lib/api/uploads';
+import { deleteAttachment, mimeFromName, uploadAttachmentMedia, type LocalFile } from '@/lib/api/uploads';
 import type { Attachment, Comment, Task } from '@/lib/api/types';
 import { ChecklistPanel, SubtasksPanel } from '@/components/task-breakdown';
 import { TaskEditDialog } from '@/components/task-create-dialog';
@@ -155,7 +155,7 @@ export default function TaskDetailScreen() {
     mutationFn: async (values: CommentFormInput) => {
       const comment = await createComment(token ?? '', { taskId: id, body: values.body });
       if (commentImage) {
-        await uploadAttachmentCloudinary(token ?? '', { commentId: comment.id }, commentImage, 'comment');
+        await uploadAttachmentMedia(token ?? '', { commentId: comment.id }, commentImage, 'comment');
       }
       return comment;
     },
@@ -184,7 +184,7 @@ export default function TaskDetailScreen() {
 
   const uploadTaskAttachment = async (file: LocalFile) => {
     try {
-      await uploadAttachmentCloudinary(token ?? '', { taskId: id }, file, 'task');
+      await uploadAttachmentMedia(token ?? '', { taskId: id }, file, 'task');
       void queryClient.invalidateQueries({ queryKey: queryKeys.taskAttachments(id) });
     } catch (err) {
       errorAlert(err, "Upload failed");

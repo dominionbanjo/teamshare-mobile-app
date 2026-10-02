@@ -23,7 +23,7 @@ import {
   deleteDocument,
   listDocuments,
 } from '@/lib/api/documents';
-import { presignAttachment, uploadToCloudinary } from '@/lib/api/uploads';
+import { uploadMediaAsset } from '@/lib/api/uploads';
 import type { DocumentItem } from '@/lib/api/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { formatRelative } from '@/lib/format';
@@ -60,19 +60,18 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
 
   const upload = useMutation({
     mutationFn: async (asset: { uri: string; name: string; mime: string }) => {
-      // Cloudinary direct upload: presign (folder `documents`) -> upload -> record URL.
-      const { uploadUrl, formParams } = await presignAttachment(
+      // Media layer: the server mints the public id and owns the URL; the device
+      // only PUTs the bytes. The document is then recorded by `assetId`.
+      const uploaded = await uploadMediaAsset(
         token ?? '',
-        asset.name,
-        asset.mime,
-        'documents'
+        asset,
+        { folder: 'documents', kind: 'document', projectId }
       );
-      const secureUrl = await uploadToCloudinary(uploadUrl, formParams, asset);
       return createHostedDocument(token ?? '', {
         projectId,
         name: asset.name,
         mime: asset.mime,
-        url: secureUrl,
+        assetId: uploaded.assetId,
       });
     },
     onSuccess: () => {

@@ -33,7 +33,7 @@ import {
   editChatMessage,
   listChatMessages,
 } from '@/lib/api/chat';
-import { presignAttachment, uploadToCloudinary } from '@/lib/api/uploads';
+import { uploadMediaAsset } from '@/lib/api/uploads';
 import type { ChatMessage } from '@/lib/api/types';
 import { displayAuthorName } from '@/lib/format/deleted-author';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -56,7 +56,20 @@ type MessageAck = {
   error?: string;
 };
 
-type PendingAttachment = { uri: string; name: string; mime: string; url: string };
+/**
+ * A picked-but-unsent chat attachment.
+ *
+ * `assetId` is the reserved upload slot the server minted — that is what the send
+ * carries. `uri` is the local file, used for the optimistic preview. `url` is the
+ * server-derived location and is NOT directly fetchable (private delivery).
+ */
+type PendingAttachment = {
+  uri: string;
+  name: string;
+  mime: string;
+  url: string;
+  assetId: string;
+};
 
 /** Optimistic message shown before the server ack (never persisted). */
 type TempMessage = {
@@ -220,13 +233,20 @@ export function ChatPanel({
       const mime = asset.mimeType ?? 'application/octet-stream';
       setUploading(asset.name);
       try {
-        const { uploadUrl, formParams } = await presignAttachment(token ?? '', asset.name, mime, 'chat');
-        const secureUrl = await uploadToCloudinary(uploadUrl, formParams, {
+        // Media layer: the server mints the public id and owns the URL; the device
+        // only PUTs the bytes. The send then carries the `assetId`, never a URL.
+        const uploaded = await uploadMediaAsset(token ?? '', {
           uri: asset.uri,
           name: asset.name,
           mime,
+        }, { folder: 'chat', kind: 'chat' });
+        setAttachment({
+          uri: asset.uri,
+          name: asset.name,
+          mime,
+          url: uploaded.url,
+          assetId: uploaded.assetId,
         });
-        setAttachment({ uri: asset.uri, name: asset.name, mime, url: secureUrl });
       } catch (err) {
         setSendError(err instanceof Error ? err.message : 'Upload failed.');
       } finally {
@@ -255,7 +275,9 @@ export function ChatPanel({
         channelId,
         authorId,
         body,
-        attachmentUrl: attachment?.url,
+        // Optimistic preview uses the device-local uri so the picked image shows
+        // immediately; the confirmed message carries the server's signed redirect.
+        attachmentUrl: attachment?.uri,
         attachmentName: attachment?.name,
         attachmentMime: attachment?.mime,
         createdAt: new Date().toISOString(),
@@ -275,7 +297,9 @@ export function ChatPanel({
         channelId,
         body,
         clientId,
-        attachmentUrl: attachment?.url,
+        // The reserved upload slot, NOT a URL — the server resolves the storage
+        // location from the asset row it minted.
+        attachmentAssetId: attachment?.assetId,
         attachmentName: attachment?.name,
         attachmentMime: attachment?.mime,
       },

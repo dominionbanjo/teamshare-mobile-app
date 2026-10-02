@@ -32,10 +32,16 @@ export async function uploadDocumentFile(token: string, formData: FormData): Pro
   return apiFetch<DocumentItem>('/documents/upload', { method: 'POST', formData, token });
 }
 
-/** Cloudinary-hosted file document: presign -> upload -> record the secure_url. */
+/**
+ * Record a file document from a reserved upload (media layer).
+ *
+ * `assetId` — NOT a url. The server reads the location and the verified byte size
+ * off the asset row it minted, so a client cannot point a stored document at a URL
+ * of its choosing nor dictate what it weighs against the quota.
+ */
 export async function createHostedDocument(
   token: string,
-  payload: { projectId: string; name: string; mime: string; url: string }
+  payload: { projectId: string; name: string; mime: string; assetId: string }
 ): Promise<DocumentItem> {
   return apiFetch<DocumentItem>('/documents', { method: 'POST', body: payload, token });
 }

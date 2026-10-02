@@ -32,7 +32,7 @@ import type { ProjectMember, Task } from '@/lib/api/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { toIsoDate } from '@/lib/format';
 import { queryKeys } from '@/lib/query/keys';
-import { uploadAttachmentCloudinary, type LocalFile } from '@/lib/api/uploads';
+import { uploadAttachmentMedia, type LocalFile } from '@/lib/api/uploads';
 import { TaskFormSchema, type TaskFormInput } from '@/lib/validation/schemas';
 import { listProjectMembers } from '@/lib/api/projects';
 import { tokens } from '@/constants/theme';
@@ -274,7 +274,7 @@ function TaskFormDialog({
         try {
           for (const file of pendingImages) {
             try {
-              await uploadAttachmentCloudinary(token, { taskId: created.id }, file, 'task');
+              await uploadAttachmentMedia(token, { taskId: created.id }, file, 'task');
             } catch {
               Alert.alert('Upload failed', `Could not upload ${file.name}.`);
             }
@@ -324,7 +324,7 @@ function TaskFormDialog({
       ]);
       void Promise.all(
         files.map((file, index) =>
-          uploadAttachmentCloudinary(token ?? '', { taskId: task!.id }, file, 'task')
+          uploadAttachmentMedia(token ?? '', { taskId: task!.id }, file, 'task')
             .catch((err: unknown) =>
               Alert.alert('Upload failed', err instanceof Error ? err.message : `Could not upload ${file.name}.`)
             )
