@@ -132,7 +132,8 @@ export interface ProjectMember {
   id: string;
   projectId: string;
   userId: string;
-  role: 'owner' | 'member' | 'viewer';
+  /** Derived from ProjectRoleSchema - do NOT re-hardcode the literals. */
+  role: ProjectRoleValue;
   user?: User;
 }
 

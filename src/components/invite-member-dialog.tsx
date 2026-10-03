@@ -9,10 +9,19 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
 import { ProjectInviteSchema, type ProjectInviteInput } from '@/lib/validation/schemas';
 
+/**
+ * Roles a project member may be given.
+ *
+ * `owner` is deliberately absent (2026-10): ownership moves only through
+ * `POST /projects/:id/transfer`, which demotes every prior owner row. Offering
+ * it here produced a second owner row that `removeMember` then refused to
+ * touch, with no transfer control in the product to comply with. Company
+ * projects have no owner at all and use `manager` instead.
+ */
 const ROLE_OPTIONS = [
+  { value: 'manager', label: 'Manager' },
   { value: 'member', label: 'Member' },
   { value: 'viewer', label: 'Viewer' },
-  { value: 'owner', label: 'Owner' },
 ];
 
 export type InviteMemberDialogProps = {

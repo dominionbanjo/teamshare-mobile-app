@@ -30,6 +30,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { queryKeys } from '@/lib/query/keys';
 import { formatDate } from '@/lib/format';
 import { tokens } from '@/constants/theme';
+import { PROJECT_ROLE_TONES } from '@/constants/enums';
 
 export default function ProjectDetailScreen() {
   const { id, channel } = useLocalSearchParams<{ id: string; channel?: string }>();
@@ -127,7 +128,11 @@ export default function ProjectDetailScreen() {
                 <Text className="text-sm font-medium text-foreground">{member.user?.name ?? 'Unknown'}</Text>
                 <Text className="text-xs text-muted-foreground">{member.user?.email ?? member.userId}</Text>
               </View>
-              <TSBadge tone={member.role === 'owner' ? 'primary' : member.role === 'viewer' ? 'neutral' : 'info'}>
+              {/* 2026-10: `manager` needs its own branch. The old ternary
+                  folded it into 'info', making a manager indistinguishable
+                  from a member. A total function keeps a new role from
+                  silently inheriting the wrong tone. */}
+              <TSBadge tone={PROJECT_ROLE_TONES[member.role] ?? 'neutral'}>
                 {member.role}
               </TSBadge>
             </View>

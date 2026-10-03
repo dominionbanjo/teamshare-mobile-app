@@ -22,14 +22,23 @@ export type MediaKind =
   | 'blog_asset'
   | 'whiteboard_thumbnail';
 
+/**
+ * Cloudinary form fields — re-sent verbatim alongside the file.
+ *
+ * There is deliberately NO `folder` field. Cloudinary prepends `folder` to
+ * `public_id`, so a reserve that sent both stored every asset at
+ * `folder/<public_id>` while the server verified at `<public_id>` — uploads landed
+ * (storage answered 200) and were still reported as never received. The server
+ * sends `public_id` as the full path and nothing else.
+ */
 export interface MediaFormParams {
   cloud_name: string;
   api_key: string;
   timestamp: string;
   signature: string;
-  folder: string;
   type?: string;
-  public_id?: string;
+  /** The FULL storage path. The only location parameter. */
+  public_id: string;
   resource_type?: string;
 }
 
@@ -49,21 +58,30 @@ export interface MediaUploadResult {
 }
 
 /**
- * Media layer (2026-10) — mirrors `frontend/src/lib/api/media.ts`.
+ * Media layer — mirrors `frontend/src/lib/api/media.ts`.
  *
- * The split: the API mints the Cloudinary public id and owns the resulting URL;
- * the device PUTs the bytes straight to storage; the API confirms and verifies.
- * The device never reports a URL, so what it sends on to `POST /attachments` or
- * `POST /documents` is an `assetId`.
+ * The split: the API mints the asset id and DERIVES the storage path from it; the
+ * device PUTs the bytes straight to storage. There is no confirmation step — the
+ * server already knows where the bytes went, and the upload is verified when the
+ * asset is attached to its owner (`POST /attachments` / `POST /documents` with the
+ * `assetId`), which is also where a missing upload is reported. The device never
+ * reports a URL, so what it sends on is an `assetId`.
  */
 
-/** Step 1 — ask the server where the file should go. */
+/**
+ * Step 1 — ask the server where the file should go.
+ *
+ * `folder` is accepted and ignored, kept only so an older caller keeps compiling.
+ * Storage location is derived from the asset id the server mints; a document's
+ * `folderPath` is a TeamShare display tree and never reaches storage.
+ */
 export async function reserveUpload(
   token: string,
   input: {
     kind?: MediaKind;
     fileName: string;
     mime: string;
+    /** @deprecated Ignored by the server; see the note above. */
     folder?: string;
     sizeBytes?: number;
     projectId?: string;
@@ -77,7 +95,6 @@ export async function reserveUpload(
       fileName: input.fileName,
       mime: input.mime,
       mimeType: input.mime,
-      folder: input.folder ?? 'task',
       ...(input.sizeBytes ? { sizeBytes: input.sizeBytes } : {}),
       ...(input.projectId ? { projectId: input.projectId } : {}),
     },
@@ -88,7 +105,16 @@ export async function reserveUpload(
  * Step 2 — hand the bytes to storage.
  *
  * Raw `fetch`: storage is NOT the TeamShare API, so there is no envelope and no
- * auth header. The response is not read for a URL — the server already knows.
+ * auth header.
+ *
+ * Storage's error message is surfaced rather than discarded. A rejection here is
+ * almost always something specific (`public_id (...) is too long`, `Invalid
+ * signature`, a media limit), and replacing it with a generic string is what turns
+ * an upload bug into a mystery.
+ *
+ * The response is not read for a URL — the server already knows — but its
+ * `public_id` IS checked against what we asked for, because a mismatch means the
+ * bytes are somewhere the server does not own.
  */
 export async function putToStorage(
   reservation: ReservedUpload,
@@ -105,35 +131,40 @@ export async function putToStorage(
   } as unknown as Blob);
 
   const res = await fetch(reservation.uploadUrl, { method: 'POST', body: formData });
+  const payload = (await res.json().catch(() => null)) as
+    | { error?: { message?: string }; public_id?: string }
+    | null;
   if (!res.ok) {
-    throw new Error('Upload to storage failed');
+    throw new Error(
+      payload?.error?.message
+        ? `Upload to storage failed: ${payload.error.message}`
+        : 'Upload to storage failed'
+    );
   }
-}
-
-/** Step 3 — confirm. The server verifies the bytes it actually received. */
-export async function completeUpload(
-  token: string,
-  assetId: string,
-  sizeBytes?: number
-): Promise<{ assetId: string; url: string; verified: boolean }> {
-  return apiFetch(`/media/uploads/${assetId}/complete`, {
-    method: 'POST',
-    token,
-    body: sizeBytes ? { sizeBytes } : {},
-  });
+  const landedAt = payload?.public_id;
+  if (landedAt && landedAt !== reservation.formParams.public_id) {
+    throw new Error(
+      `Storage kept the file at an unexpected location (${landedAt}). Nothing was saved — please retry.`
+    );
+  }
 }
 
 /** The whole lifecycle for a file that becomes an attachment row. */
 export async function uploadMedia(
   token: string,
   file: LocalFile,
-  opts: { kind?: MediaKind; folder?: string; projectId?: string; sizeBytes?: number } = {}
+  opts: {
+    kind?: MediaKind;
+    /** @deprecated Ignored by the server. */
+    folder?: string;
+    projectId?: string;
+    sizeBytes?: number;
+  } = {}
 ): Promise<MediaUploadResult> {
   const reservation = await reserveUpload(token, {
     kind: opts.kind,
     fileName: file.name,
     mime: file.mime,
-    folder: opts.folder ?? 'task',
     sizeBytes: opts.sizeBytes,
     projectId: opts.projectId,
   });
@@ -141,21 +172,27 @@ export async function uploadMedia(
     await putToStorage(reservation, file);
   } catch (err) {
     // Release the slot so the reaper has nothing to clean, rather than leaving it
-    // to sit until the 30-minute reservation expiry.
+    // to sit until the reservation expiry.
     await apiFetch(`/media/assets/${reservation.assetId}`, { method: 'DELETE', token }).catch(
       () => undefined
     );
     throw err;
   }
-  const done = await completeUpload(token, reservation.assetId, opts.sizeBytes);
-  return { assetId: done.assetId, url: done.url, name: file.name, mime: file.mime };
+  // No confirmation step: the derived url is known from the reserve, and the
+  // authoritative size is recorded server-side when the asset is attached.
+  return {
+    assetId: reservation.assetId,
+    url: reservation.url,
+    name: file.name,
+    mime: file.mime,
+  };
 }
 
 /** The bytes only (no attachment row) — for a document, an avatar, a cover. */
 export async function uploadMediaAsset(
   token: string,
   file: LocalFile,
-  opts: { kind?: MediaKind; folder?: string; projectId?: string } = {}
+  opts: { kind?: MediaKind; /** @deprecated Ignored by the server. */ folder?: string; projectId?: string } = {}
 ): Promise<MediaUploadResult> {
   return uploadMedia(token, file, opts);
 }

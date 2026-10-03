@@ -37,6 +37,24 @@ export const ProjectRoleEnum = ProjectRoleSchema.enum;
 export const PROJECT_ROLE_VALUES = ProjectRoleSchema.options;
 export type ProjectRoleValue = (typeof PROJECT_ROLE_VALUES)[number];
 
+/**
+ * Badge tone per project role (2026-10).
+ *
+ * Typed as a TOTAL `Record<ProjectRoleValue, …>` rather than
+ * `Record<string, …>`: an index-signature map would let a newly added role
+ * compile fine and then silently fall through to 'neutral'. `Record<…, …>`
+ * makes tsc fail until the new role is given an intentional tone.
+ */
+export const PROJECT_ROLE_TONES: Record<
+  ProjectRoleValue,
+  'primary' | 'violet' | 'info' | 'neutral'
+> = {
+  owner: 'primary',
+  manager: 'violet',
+  member: 'info',
+  viewer: 'neutral',
+};
+
 export const TaskStatusEnum = TaskStatusSchema.enum;
 export const TASK_STATUS_VALUES = TaskStatusSchema.options;
 export type TaskStatusValue = (typeof TASK_STATUS_VALUES)[number];

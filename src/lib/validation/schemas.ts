@@ -9,7 +9,15 @@ import { z } from 'zod';
 export const CompanyRoleSchema = z.enum(['owner', 'admin', 'member', 'viewer', 'secret_manager']);
 export type CompanyRole = z.infer<typeof CompanyRoleSchema>;
 
-export const ProjectRoleSchema = z.enum(['owner', 'member', 'viewer']);
+/**
+ * Mirrors the backend `ProjectRole` enum.
+ *
+ * `owner` is PERSONAL PROJECTS ONLY: a company project belongs to the company,
+ * has no owner, and never carries an `owner` row. Company projects use
+ * `manager` (a per-project grant) instead. See
+ * `docs/agent-guides/project-ownership.md`.
+ */
+export const ProjectRoleSchema = z.enum(['owner', 'manager', 'member', 'viewer']);
 export type ProjectRole = z.infer<typeof ProjectRoleSchema>;
 
 export const TaskStatusSchema = z.enum(['open', 'in_progress', 'in_review', 'resolved', 'closed']);
