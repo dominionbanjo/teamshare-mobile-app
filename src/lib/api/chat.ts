@@ -8,6 +8,8 @@ export interface SendChatMessagePayload {
   attachmentUrl?: string;
   attachmentName?: string;
   attachmentMime?: string;
+  /** Idempotency key — a retried send with the same key returns the original message. */
+  clientRequestId?: string;
 }
 
 export interface ChannelListEntry extends ChatChannel {
