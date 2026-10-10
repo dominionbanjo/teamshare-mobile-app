@@ -1,4 +1,4 @@
-import { apiFetch, apiFetchEnvelope } from './client';
+import { apiFetch, apiFetchEnvelope, apiFetchText } from './client';
 import type { EnvVar, EnvVarAuditEntry, Paginated } from './types';
 import type { EnvTier } from '@/lib/validation/schemas';
 
@@ -43,11 +43,11 @@ export async function deleteEnvVar(token: string, id: string): Promise<void> {
 }
 
 /**
- * GET /env-vars/export?projectId=&tier= - returns dotenv text. The backend
- * wraps it in the standard envelope, so data is the plain string.
+ * GET /env-vars/export?projectId=&tier= - returns raw dotenv text
+ * (`text/plain`, no JSON envelope).
  */
 export async function exportEnvVars(token: string, projectId: string, tier: string): Promise<string> {
-  return apiFetch<string>('/env-vars/export', { token, query: { projectId, tier } });
+  return apiFetchText('/env-vars/export', { token, query: { projectId, tier } });
 }
 
 /** Audit trail for a project's env vars (reveals, creates, deletes...). */

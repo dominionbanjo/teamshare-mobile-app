@@ -187,6 +187,43 @@ async function parseEnvelope<T>(
  * Fetch wrapper parsing the TeamShare envelope.
  * Throws ApiError on transport failures, non-2xx statuses, or error envelopes.
  */
+/**
+ * Fetch wrapper for raw-text routes (e.g. GET /env-vars/export, which returns
+ * `text/plain` with NO JSON envelope). Reads the body as text exactly once;
+ * error responses are still JSON envelopes, so a non-OK or non-text response
+ * is probed as JSON first to surface the real message/code. Throws ApiError
+ * like apiFetch.
+ */
+export async function apiFetchText(path: string, options: ApiFetchOptions = {}): Promise<string> {
+  return fetchWithRetry<string>(path, options, async (response) => {
+    const raw = await response.text();
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!response.ok || !contentType.includes('text/plain')) {
+      try {
+        const payload = JSON.parse(raw) as {
+          success?: boolean;
+          error?: { message?: string; code?: string; details?: unknown };
+        };
+        if (payload && typeof payload === 'object' && payload.error) {
+          throw new ApiError(
+            payload.error.message ?? 'Something went wrong.',
+            payload.error.code ?? 'UNKNOWN_ERROR',
+            response.status,
+            payload.error.details,
+          );
+        }
+      } catch (err) {
+        if (err instanceof ApiError) throw err;
+        // Not JSON - fall through to the status check below.
+      }
+      if (!response.ok) {
+        throw new ApiError(`Request failed (${response.status}).`, 'HTTP_ERROR', response.status);
+      }
+    }
+    return raw;
+  });
+}
+
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   return fetchWithRetry<T>(path, options, async (response) => {
     const { ok, data, error } = await parseEnvelope<T>(response);

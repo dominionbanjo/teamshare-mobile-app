@@ -60,11 +60,20 @@ export const EnvVarActionSchema = z.enum([
 ]);
 export type EnvVarAction = z.infer<typeof EnvVarActionSchema>;
 
+// Mirrors backend API_KEY_SCOPES (11 scopes). Unused by any screen today
+// (API keys are web-only) but kept exhaustive so the mirror never drifts.
 export const ApiKeyScopeSchema = z.enum([
   'tasks:read',
   'tasks:write',
   'projects:read',
   'chat:read',
+  'chat:write',
+  'agents:read',
+  'agents:write',
+  'documents:write',
+  'whiteboards:write',
+  'tools:run',
+  'blog:write',
 ]);
 export type ApiKeyScope = z.infer<typeof ApiKeyScopeSchema>;
 
