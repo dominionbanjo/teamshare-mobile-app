@@ -145,6 +145,11 @@ export const CreateTaskSchema = z.object({
   tags: z.array(z.string().min(1).max(24)).max(10).default([]),
   /** IMP-680: ready for the project's build agent (join build queue). */
   readyForDev: z.boolean().optional(),
+  /** QA test brief (2026-10): first-class Task columns, never description markdown. */
+  qaWebsite: z.string().trim().url().max(2_000).optional().nullable(),
+  qaWhatToTest: z.string().max(8_000).optional().nullable(),
+  qaSteps: z.string().max(8_000).optional().nullable(),
+  qaExpectation: z.string().max(8_000).optional().nullable(),
 });
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 
